@@ -60,6 +60,19 @@ CREATE TABLE IF NOT EXISTS seduis_moi_users (
     updated_at timestamptz DEFAULT now()
 );
 
+-- 3.5 TABLE PROFILES (Pour system auth existant)
+CREATE TABLE IF NOT EXISTS seduis_moi_profiles (
+    id uuid PRIMARY KEY,
+    email text NOT NULL,
+    name text,
+    surname text,
+    gender text DEFAULT 'other',
+    avatar_url text,
+    is_online boolean DEFAULT false,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
 -- 4. TABLE PREZANS GLOBAL (Online Presence)
 -- Tracked via Supabase Realtime Presence (pa beswen DB)
 -- Men nou mete yon tab pou statistik si nou vle
@@ -141,6 +154,15 @@ CREATE INDEX IF NOT EXISTS idx_seduis_moi_events_room ON seduis_moi_events(room_
 CREATE INDEX IF NOT EXISTS idx_seduis_moi_users_email ON seduis_moi_users(email);
 CREATE INDEX IF NOT EXISTS idx_seduis_moi_users_username ON seduis_moi_users(username);
 CREATE INDEX IF NOT EXISTS idx_seduis_moi_users_online ON seduis_moi_users(is_online, last_seen DESC);
+
+-- Add profiles indexes only if table exists
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'seduis_moi_profiles') THEN
+        CREATE INDEX IF NOT EXISTS idx_seduis_moi_profiles_email ON seduis_moi_profiles(email);
+        CREATE INDEX IF NOT EXISTS idx_seduis_moi_profiles_online ON seduis_moi_profiles(is_online, updated_at DESC);
+    END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS idx_seduis_moi_games_active ON seduis_moi_games(is_active);
 CREATE INDEX IF NOT EXISTS idx_seduis_moi_invitations_receiver ON seduis_moi_invitations(receiver_id, status);
 CREATE INDEX IF NOT EXISTS idx_seduis_moi_invitations_sender ON seduis_moi_invitations(sender_id, status);
@@ -194,6 +216,16 @@ BEGIN
         DROP TRIGGER IF EXISTS seduis_moi_games_updated_at ON seduis_moi_games;
         CREATE TRIGGER seduis_moi_games_updated_at
             BEFORE UPDATE ON seduis_moi_games
+            FOR EACH ROW EXECUTE FUNCTION seduis_moi_update_timestamp();
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'seduis_moi_profiles') THEN
+        DROP TRIGGER IF EXISTS seduis_moi_profiles_updated_at ON seduis_moi_profiles;
+        CREATE TRIGGER seduis_moi_profiles_updated_at
+            BEFORE UPDATE ON seduis_moi_profiles
             FOR EACH ROW EXECUTE FUNCTION seduis_moi_update_timestamp();
     END IF;
 END $$;
@@ -305,6 +337,27 @@ BEGIN
             FOR INSERT WITH CHECK (true);
 
         CREATE POLICY "seduis_moi users update" ON seduis_moi_users
+            FOR UPDATE USING (auth.uid()::text = id::text);
+    END IF;
+END $$;
+
+-- Profiles: pour system auth existant
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'seduis_moi_profiles') THEN
+        ALTER TABLE seduis_moi_profiles ENABLE ROW LEVEL SECURITY;
+        
+        DROP POLICY IF EXISTS "seduis_moi profiles select" ON seduis_moi_profiles;
+        DROP POLICY IF EXISTS "seduis_moi profiles insert" ON seduis_moi_profiles;
+        DROP POLICY IF EXISTS "seduis_moi profiles update" ON seduis_moi_profiles;
+
+        CREATE POLICY "seduis_moi profiles select" ON seduis_moi_profiles
+            FOR SELECT USING (auth.uid()::text = id::text);
+
+        CREATE POLICY "seduis_moi profiles insert" ON seduis_moi_profiles
+            FOR INSERT WITH CHECK (auth.uid()::text = id::text);
+
+        CREATE POLICY "seduis_moi profiles update" ON seduis_moi_profiles
             FOR UPDATE USING (auth.uid()::text = id::text);
     END IF;
 END $$;
