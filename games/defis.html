@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Défis</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="game-section">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-lucide="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-lucide="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h2 id="game-title">Défis</h2>
+                <p id="game-subtitle">Petits défis amusants</p>
+            </div>
+
+            <div class="game-content">
+                <div id="player-selection" class="player-selection">
+                    <div class="player-indicator">
+                        <p id="select-player">Qui commence les défis?</p>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="selectPlayer(1)">
+                            <i data-lucide="user"></i>
+                            <span id="player1-btn">Joueur 1</span>
+                        </button>
+                        <button class="btn-game" onclick="selectPlayer(2)">
+                            <i data-lucide="user"></i>
+                            <span id="player2-btn">Joueur 2</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="challenge-phase" class="challenge-phase hidden">
+                    <div class="player-indicator">
+                        <p id="current-player">Défi pour: <span id="player-name"></span></p>
+                    </div>
+
+                    <div class="question-card">
+                        <p id="challenge-text" class="question-text"></p>
+                        <div class="challenge-timer">
+                            <span id="timer-display">⏱️ 30 secondes</span>
+                        </div>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="skipChallenge()">
+                            <i data-lucide="skip-forward"></i>
+                            <span id="skip-btn">Passer</span>
+                        </button>
+                        <button class="btn-game btn-next" onclick="completeChallenge()">
+                            <i data-lucide="check"></i>
+                            <span id="complete-btn">Défi accompli!</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="completion-phase" class="completion-phase hidden">
+                    <div class="question-card">
+                        <p id="completion-message">Session de défis terminée!</p>
+                        <div class="completion-stats">
+                            <p id="challenges-completed">Défis accomplis: 0</p>
+                        </div>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="restartGame()">
+                            <i data-lucide="refresh-cw"></i>
+                            <span id="restart-btn">Nouvelle session</span>
+                        </button>
+                        <button class="btn-game btn-next" onclick="goBack()">
+                            <i data-lucide="home"></i>
+                            <span id="home-btn">Retour</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/main.js?v=2.0"></script>
+    <script src="../js/games/defis.js?v=1.0"></script>
+    <script>
+        if (window.lucide) lucide.createIcons();
+        if (typeof createIcons === 'function') createIcons();
+    </script>
+
+    <!-- Online Multiplayer Support -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/game-online-sync.js"></script>
+    <script src="../js/chat.js"></script>
+</body>
+</html>

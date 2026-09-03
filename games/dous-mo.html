@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doux Mots</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+</head>
+<body>
+    <div class="container">
+        <div class="game-section">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h2 id="game-title">Doux Mots</h2>
+                <p id="game-subtitle">Échangez des compliments chaleureux et des questions intimes</p>
+            </div>
+
+            <div class="game-content">
+                <div class="player-indicator">
+                    <p id="turn-indicator">Tour de: <span id="player-name"></span></p>
+                </div>
+
+                <div class="question-card" style="border: 2px dashed rgba(220, 38, 38, 0.4); background: rgba(26, 26, 26, 0.8);">
+                    <p id="compliment-text" class="question-text" style="font-size: 1.4rem; font-style: italic; color: #ffccd5; line-height: 1.5;"></p>
+                </div>
+
+                <div class="game-buttons" style="margin-top: 20px;">
+                    <button class="btn-game btn-next" onclick="nextCompliment()" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+                        <i data-icon="heart"></i>
+                        <span id="next-btn-text">Doux Mot Suivant</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/main.js?v=1.0"></script>
+    <script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/games/dous-mo.js?v=1.0"></script>
+    <script>
+        createIcons();
+    </script>
+
+    <!-- Online Multiplayer Support -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/game-online-sync.js"></script>
+    <script src="../js/chat.js"></script>
+</body>
+</html>

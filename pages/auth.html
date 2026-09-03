@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seduit Moi — Connexion & Profil</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+    <style>
+        .auth-container {
+            max-width: 460px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .auth-card {
+            background: var(--surface);
+            border: 1px solid var(--surface-light);
+            border-radius: 20px;
+            padding: 32px 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: var(--background);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+            border: 1px solid var(--surface-light);
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.95rem;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        .auth-tab.active {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: white;
+            box-shadow: 0 4px 12px rgba(220,38,38,0.4);
+        }
+
+        .btn-google {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.25s;
+            margin-bottom: 20px;
+        }
+
+        .btn-google:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-1px);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--surface-light);
+        }
+        .divider span { padding: 0 12px; }
+
+        .avatar-upload-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .avatar-preview {
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            border: 3px solid #dc2626;
+            margin-bottom: 10px;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(220,38,38,0.4);
+        }
+
+        .avatar-preview img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        .avatar-upload-btn {
+            font-size: 0.8rem; color: var(--primary); font-weight: 600; cursor: pointer;
+        }
+
+        .gender-options {
+            display: flex; gap: 10px; margin-bottom: 16px;
+        }
+
+        .gender-btn {
+            flex: 1; padding: 12px 8px; background: var(--background);
+            border: 1.5px solid var(--surface-light); border-radius: 10px;
+            color: var(--text-muted); text-align: center; cursor: pointer;
+            font-size: 0.85rem; font-weight: 600; transition: all 0.2s;
+        }
+
+        .gender-btn.selected {
+            border-color: #dc2626; color: white; background: rgba(220,38,38,0.12);
+        }
+
+        .form-input {
+            width: 100%; padding: 14px 16px; background: var(--background);
+            border: 1.5px solid var(--surface-light); border-radius: 10px;
+            color: var(--text); font-size: 0.95rem; margin-bottom: 14px;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { outline: none; border-color: #dc2626; }
+
+        .btn-submit {
+            width: 100%; padding: 16px; border: none; border-radius: 12px;
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: white; font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 8px 20px rgba(220,38,38,0.4);
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(220,38,38,0.5); }
+
+        .error-alert {
+            background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4);
+            color: #ef4444; border-radius: 10px; padding: 10px 14px; font-size: 0.85rem;
+            margin-bottom: 16px; display: none;
+        }
+
+        .room-notice {
+            background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3);
+            color: var(--success); border-radius: 10px; padding: 10px 14px; font-size: 0.85rem;
+            margin-bottom: 16px; text-align: center; font-weight: 600;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="auth-container">
+            <div class="header" style="margin-bottom: 24px;">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+                <div class="lang-toggle" style="margin-left:auto;">
+                    <button type="button" id="auth-lang-fr" class="active" onclick="applyAuthLanguage('fr')">FR</button>
+                    <button type="button" id="auth-lang-ht" onclick="applyAuthLanguage('ht')">HT</button>
+                </div>
+            </div>
+
+            <div id="room-notice-box" class="room-notice hidden">
+                <i data-icon="link"></i> <span id="room-notice-msg">Connectez-vous pour rejoindre la salle <span id="target-room-code" style="font-weight:800;"></span></span>
+            </div>
+
+            <div class="auth-card">
+                <!-- Auth Tabs -->
+                <div class="auth-tabs">
+                    <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Connexion</button>
+                    <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Inscription</button>
+                </div>
+
+                <!-- Google OAuth Button -->
+                <button class="btn-google" onclick="loginGoogle()">
+                    <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                    <span id="google-btn-text">Continuer avec Google</span>
+                </button>
+
+                <div class="divider"><span id="or-divider-text">ou avec email</span></div>
+
+                <div id="error-alert" class="error-alert"></div>
+
+                <!-- LOGIN FORM -->
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <input class="form-input" type="email" id="login-email" placeholder="Adresse email" required>
+                    <input class="form-input" type="password" id="login-password" placeholder="Mot de passe" required>
+                    <button type="submit" class="btn-submit" id="login-submit-btn">
+                        <span id="login-submit-text">Se connecter</span>
+                        <i data-icon="arrow-right"></i>
+                    </button>
+                </form>
+
+                <!-- REGISTER FORM -->
+                <form id="register-form" class="hidden" onsubmit="handleRegister(event)">
+                    <!-- Profile Photo Upload -->
+                    <div class="avatar-upload-wrap">
+                        <div class="avatar-preview" onclick="document.getElementById('avatar-file').click()">
+                            <img id="avatar-img-preview" src="https://ui-avatars.com/api/?name=User&background=dc2626&color=fff" alt="Avatar">
+                        </div>
+                        <span class="avatar-upload-btn" id="avatar-upload-text" onclick="document.getElementById('avatar-file').click()">Ajouter une photo de profil</span>
+                        <input type="file" id="avatar-file" accept="image/*" style="display:none" onchange="previewAvatar(event)">
+                    </div>
+
+                    <div style="display:flex; gap:10px;">
+                        <input class="form-input" type="text" id="reg-name" placeholder="Prénom" required>
+                        <input class="form-input" type="text" id="reg-surname" placeholder="Nom">
+                    </div>
+
+                    <div class="gender-options">
+                        <div class="gender-btn selected" id="gender-male" onclick="selectGender('male')">👨 Male / Gason</div>
+                        <div class="gender-btn" id="gender-female" onclick="selectGender('female')">👩 Female / Fi</div>
+                        <div class="gender-btn" id="gender-other" onclick="selectGender('other')">✨ Autre / Lòt</div>
+                    </div>
+
+                    <input class="form-input" type="email" id="reg-email" placeholder="Adresse email" required>
+                    <input class="form-input" type="password" id="reg-password" placeholder="Mot de passe (6 car. min)" minlength="6" required>
+
+                    <button type="submit" class="btn-submit" id="reg-submit-btn">
+                        <span id="reg-submit-text">Créer mon compte</span>
+                        <i data-icon="check"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/main.js?v=2.0"></script>
+    <script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/auth-helper.js"></script>
+    <script>
+        createIcons();
+        loadUserData();
+
+        let selectedGender = 'male';
+        let avatarBase64 = '';
+        let currentLang = (userData && userData.language) || 'fr';
+
+        const authTexts = {
+            fr: {
+                loginTab: "Connexion",
+                regTab: "Inscription",
+                googleBtn: "Continuer avec Google",
+                orEmail: "ou avec email",
+                emailPlh: "Adresse email",
+                passPlh: "Mot de passe",
+                loginBtn: "Se connecter",
+                namePlh: "Prénom",
+                surnamePlh: "Nom de famille",
+                passMinPlh: "Mot de passe (6 car. min)",
+                regBtn: "Créer mon compte",
+                avatarBtn: "Ajouter une photo de profil",
+                roomNotice: "Connectez-vous pour rejoindre la salle",
+                errLogin: "Email ou mot de passe incorrect.",
+                errName: "Veuillez entrer votre prénom.",
+                errRegister: "Erreur lors de la création du compte."
+            },
+            ht: {
+                loginTab: "Koneksyon",
+                regTab: "Enskripsyon",
+                googleBtn: "Kontinye ak Google",
+                orEmail: "oswa ak imèl",
+                emailPlh: "Adrès imèl",
+                passPlh: "Modpas",
+                loginBtn: "Konekte",
+                namePlh: "Non / Prenon",
+                surnamePlh: "Siyati (opsyonèl)",
+                passMinPlh: "Modpas (6 karaktè min)",
+                regBtn: "Kreye kont mwen",
+                avatarBtn: "Mete yon foto profil",
+                roomNotice: "Konekte oswa enskri pou w rantre nan chanm",
+                errLogin: "Imèl oswa modpas la pa kòrèk.",
+                errName: "Tanpri antre non ou.",
+                errRegister: "Erè pandan kreyasyon kont lan."
+            }
+        };
+
+        const targetRoom = new URLSearchParams(window.location.search).get('room');
+        if (targetRoom) {
+            document.getElementById('room-notice-box').classList.remove('hidden');
+            document.getElementById('target-room-code').textContent = targetRoom;
+        }
+
+        function applyAuthLanguage(lang) {
+            currentLang = lang;
+            userData.language = lang;
+            saveUserData();
+            const t = authTexts[lang] || authTexts.fr;
+
+            document.getElementById('tab-login').textContent = t.loginTab;
+            document.getElementById('tab-register').textContent = t.regTab;
+            document.getElementById('login-email').placeholder = t.emailPlh;
+            document.getElementById('login-password').placeholder = t.passPlh;
+            document.getElementById('login-submit-text').textContent = t.loginBtn;
+            document.getElementById('reg-name').placeholder = t.namePlh;
+            document.getElementById('reg-surname').placeholder = t.surnamePlh;
+            document.getElementById('reg-email').placeholder = t.emailPlh;
+            document.getElementById('reg-password').placeholder = t.passMinPlh;
+            document.getElementById('reg-submit-text').textContent = t.regBtn;
+            document.getElementById('avatar-upload-text').textContent = t.avatarBtn;
+            document.getElementById('or-divider-text').textContent = t.orEmail;
+            document.getElementById('google-btn-text').textContent = t.googleBtn;
+
+            if (targetRoom) {
+                document.getElementById('room-notice-msg').textContent = `${t.roomNotice} ${targetRoom}`;
+            }
+
+            const btnFr = document.getElementById('auth-lang-fr');
+            const btnHt = document.getElementById('auth-lang-ht');
+            if (btnFr && btnHt) {
+                btnFr.classList.toggle('active', lang === 'fr');
+                btnHt.classList.toggle('active', lang === 'ht');
+            }
+        }
+
+        // Check if already logged in
+        window.seduitAuth.getSession().then(session => {
+            if (session && session.user) {
+                redirectAfterAuth();
+            }
+        });
+
+        function switchAuthTab(tab) {
+            document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+            document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+            document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
+            document.getElementById('error-alert').style.display = 'none';
+        }
+
+        function selectGender(g) {
+            selectedGender = g;
+            document.getElementById('gender-male').classList.toggle('selected', g === 'male');
+            document.getElementById('gender-female').classList.toggle('selected', g === 'female');
+            document.getElementById('gender-other').classList.toggle('selected', g === 'other');
+        }
+
+        function previewAvatar(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                avatarBase64 = evt.target.result;
+                document.getElementById('avatar-img-preview').src = avatarBase64;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errEl = document.getElementById('error-alert');
+            errEl.style.display = 'none';
+
+            const btn = document.getElementById('login-submit-btn');
+            btn.innerHTML = '<span class="loader"></span>';
+
+            try {
+                await window.seduitAuth.login(email, password);
+                await redirectAfterAuth();
+            } catch(err) {
+                const t = authTexts[currentLang] || authTexts.fr;
+                btn.innerHTML = `<span id="login-submit-text">${t.loginBtn}</span> <i data-icon="arrow-right"></i>`;
+                createIcons();
+                errEl.textContent = t.errLogin;
+                errEl.style.display = 'block';
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value.trim();
+            const surname = document.getElementById('reg-surname').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const errEl = document.getElementById('error-alert');
+            const t = authTexts[currentLang] || authTexts.fr;
+            errEl.style.display = 'none';
+
+            if (!name) {
+                errEl.textContent = t.errName;
+                errEl.style.display = 'block';
+                return;
+            }
+
+            const btn = document.getElementById('reg-submit-btn');
+            btn.innerHTML = '<span class="loader"></span>';
+
+            try {
+                await window.seduitAuth.register(email, password, name, surname, selectedGender, avatarBase64);
+                await redirectAfterAuth();
+            } catch(err) {
+                btn.innerHTML = `<span id="reg-submit-text">${t.regBtn}</span> <i data-icon="check"></i>`;
+                createIcons();
+                errEl.textContent = err.message || t.errRegister;
+                errEl.style.display = 'block';
+            }
+        }
+
+        function loginGoogle() {
+            window.seduitAuth.loginWithGoogle(targetRoom);
+        }
+
+        async function redirectAfterAuth() {
+            if (targetRoom) {
+                try {
+                    if (window.seduitOnline) {
+                        window.seduitOnline.init();
+                        const userName = localStorage.getItem('seduitMoiName') || 'Invité';
+                        await window.seduitOnline.joinRoom(targetRoom, userName);
+                    }
+                } catch(e) {
+                    console.warn('Auto-join room error:', e);
+                }
+                window.location.href = `dashboard.html?room=${encodeURIComponent(targetRoom)}`;
+            } else {
+                window.location.href = 'intro.html';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyAuthLanguage(currentLang);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu de Contact</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+</head>
+<body>
+    <div class="container">
+        <div class="game-section">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h2 id="game-title">Jeu de Contact</h2>
+                <p id="game-subtitle">Connectez-vous physiquement avec des défis tactiles amusants</p>
+            </div>
+
+            <div class="game-content">
+                <div class="player-indicator">
+                    <p id="turn-indicator">Tour de: <span id="player-name"></span></p>
+                </div>
+
+                <div class="question-card" style="border: 2px solid rgba(220, 38, 38, 0.6); background: rgba(220, 38, 38, 0.05);">
+                    <p id="contact-instruction" class="question-text" style="font-size: 1.35rem; font-weight: 600; line-height: 1.5; color: var(--text);"></p>
+                </div>
+
+                <div id="contact-timer-display" style="font-size: 1.5rem; font-weight: 700; color: var(--primary); margin: 15px 0;"></div>
+
+                <div class="game-buttons" style="margin-top: 20px;">
+                    <button class="btn-game" onclick="startTimer()" style="background: var(--surface-light); border: 2px solid var(--primary);">
+                        <i data-icon="zap"></i>
+                        <span id="timer-btn-text">Lancer le Compteur</span>
+                    </button>
+                    <button class="btn-game btn-next" onclick="nextContact()">
+                        <i data-icon="skip-forward"></i>
+                        <span id="next-btn-text">Défi Suivant</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/main.js?v=1.0"></script>
+    <script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/games/contact.js?v=1.0"></script>
+    <script>
+        createIcons();
+    </script>
+</body>
+</html>

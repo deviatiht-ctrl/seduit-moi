@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seduit Moi - Dashboard</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+    <style>
+        /* Online Mode Banner */
+        .online-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(220,38,38,0.12), rgba(153,27,27,0.08));
+            border: 1px solid rgba(220,38,38,0.3);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+        .online-banner .ob-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 1.4s infinite;
+            flex-shrink: 0;
+        }
+        .online-banner .ob-info { flex: 1; }
+        .online-banner .ob-room { font-weight: 700; letter-spacing: 1px; color: #ef4444; }
+        .online-banner .ob-names { color: var(--text-muted); font-size: 0.82rem; }
+        .online-banner .ob-partner { font-weight: 600; }
+        .ob-wait { color: var(--warning); font-size: 0.82rem; }
+
+        /* Waiting overlay on game cards in online mode */
+        .game-card.offline-only {
+            opacity: 0.45;
+            position: relative;
+        }
+        .game-card.offline-only::after {
+            content: "Local only";
+            position: absolute;
+            bottom: 8px; right: 8px;
+            font-size: 0.7rem;
+            background: rgba(0,0,0,0.5);
+            color: #aaa;
+            padding: 2px 8px;
+            border-radius: 100px;
+        }
+        @keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:0.4 } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+                <div class="user-info">
+                    <span id="display-names"></span>
+                </div>
+            </div>
+
+            <!-- Online Mode Banner (shown only when room is active) -->
+            <div class="online-banner" id="online-banner" style="display:none; flex-wrap:wrap; gap:10px;">
+                <div class="ob-dot"></div>
+                <div class="ob-info" style="flex:1; min-width:180px;">
+                    <div style="display:flex; align-items:center; gap:6px;"><i data-icon="globe" style="width:16px;height:16px;"></i> Mode en ligne — Salle <span class="ob-room" id="ob-room-code"></span></div>
+                    <div id="ob-game-info" style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;"></div>
+                    <div id="ob-status" class="ob-wait">En attente du partenaire...</div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button onclick="shareDashboardWhatsApp()" id="btn-wa-room-link" style="background:#25D366; border:none; color:white; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:6px;"><i data-icon="send"></i> WhatsApp</button>
+                    <button onclick="copyRoomLink()" id="btn-copy-room-link" style="background:var(--surface-light); border:1px solid rgba(255,255,255,0.15); color:var(--text); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:6px;"><i data-icon="copy"></i> Copier le lien</button>
+                    <button onclick="leaveOnlineRoom()" style="background:rgba(220,38,38,0.15); border:none; color:#ef4444; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:0.8rem; font-weight:600;">Quitter</button>
+                </div>
+            </div>
+
+            <div class="welcome-section">
+                <h2 id="welcome-title">Bienvenue</h2>
+                <p id="welcome-subtitle">Choisissez une activité pour commencer</p>
+            </div>
+
+            <div class="games-grid">
+                <div class="game-card" id="card-dis-moi" onclick="goToGame('dis-moi')">
+                    <div class="game-icon">
+                        <i data-icon="message-circle"></i>
+                    </div>
+                    <h3 id="game1-title">Dis moi ce que tu veux pas me dire</h3>
+                    <p id="game1-desc">Révélez vos secrets les plus profonds</p>
+                </div>
+
+                <div class="game-card" id="card-action-verite" onclick="goToGame('action-verite')">
+                    <div class="game-icon">
+                        <i data-icon="scale"></i>
+                    </div>
+                    <h3 id="game2-title">Action ou Vérité</h3>
+                    <p id="game2-desc">Le classique des jeux de soirée</p>
+                </div>
+
+                <div class="game-card" id="card-apprend-moi" onclick="goToGame('apprend-moi')">
+                    <div class="game-icon">
+                        <i data-icon="user"></i>
+                    </div>
+                    <h3 id="game3-title">Apprends-moi à te connaître</h3>
+                    <p id="game3-desc">Questions pour mieux vous comprendre</p>
+                </div>
+
+                <div class="game-card" id="card-tictactoe" onclick="goToGame('tictactoe')">
+                    <div class="game-icon">
+                        <i data-icon="grid-3x3"></i>
+                    </div>
+                    <h3 id="game4-title">Tic-Tac-Toe</h3>
+                    <p id="game4-desc">Jeu de stratégie pour deux</p>
+                </div>
+
+                <div class="game-card hot" id="card-hot" onclick="goToGame('hot')">
+                    <div class="game-icon hot-icon">
+                        <i data-icon="flame"></i>
+                    </div>
+                    <h3 id="game5-title">Hot</h3>
+                    <p id="game5-desc">Questions pour monter le niveau</p>
+                </div>
+
+                <div class="game-card" id="card-devinettes" onclick="goToGame('devinettes')">
+                    <div class="game-icon">
+                        <i data-icon="lightbulb"></i>
+                    </div>
+                    <h3 id="game6-title">Devinettes</h3>
+                    <p id="game6-desc">Testez votre intuition</p>
+                </div>
+
+                <div class="game-card" id="card-preferences" onclick="goToGame('preferences')">
+                    <div class="game-icon">
+                        <i data-icon="list"></i>
+                    </div>
+                    <h3 id="game7-title">Préférences</h3>
+                    <p id="game7-desc">Ce que vous préférez vraiment</p>
+                </div>
+
+                <div class="game-card" id="card-defis" onclick="goToGame('defis')">
+                    <div class="game-icon">
+                        <i data-icon="zap"></i>
+                    </div>
+                    <h3 id="game8-title">Défis</h3>
+                    <p id="game8-desc">Petits défis amusants</p>
+                </div>
+
+                <div class="game-card" id="card-stickers" onclick="goToGame('stickers')">
+                    <div class="game-icon">
+                        <i data-icon="smile"></i>
+                    </div>
+                    <h3 id="game9-title">Défi Stickers</h3>
+                    <p id="game9-desc">Réagissez avec de superbes stickers romantiques et drôles</p>
+                </div>
+
+                <div class="game-card" id="card-meme" onclick="goToGame('meme')">
+                    <div class="game-icon">
+                        <i data-icon="image"></i>
+                    </div>
+                    <h3 id="game10-title">Nos Memes</h3>
+                    <p id="game10-desc">Riez ensemble en découvrant vos habitudes de couple</p>
+                </div>
+
+                <div class="game-card" id="card-dous-mo" onclick="goToGame('dous-mo')">
+                    <div class="game-icon">
+                        <i data-icon="heart"></i>
+                    </div>
+                    <h3 id="game11-title">Doux Mots</h3>
+                    <p id="game11-desc">Partagez des compliments chaleureux et des questions complices</p>
+                </div>
+
+                <!-- Contact: local only, grayed out in online mode -->
+                <div class="game-card" id="card-contact" onclick="goToGame('contact')">
+                    <div class="game-icon">
+                        <i data-icon="hand"></i>
+                    </div>
+                    <h3 id="game12-title">Jeu de Contact</h3>
+                    <p id="game12-desc">Connectez-vous physiquement avec des mini-jeux tactiles amusants</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/main.js?v=2.0"></script>
+    <script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/chat.js"></script>
+    <script>
+        createIcons();
+        loadUserData();
+
+        // Detect online mode from URL ?room=CODE
+        const _roomCode = new URLSearchParams(window.location.search).get('room')
+                        || localStorage.getItem('seduitMoiRoom');
+        const _onlineMode = !!_roomCode;
+        const _myRole = localStorage.getItem('seduitMoiRole');
+
+        if (_onlineMode && _roomCode) {
+            // Show online banner
+            document.getElementById('online-banner').style.display = 'flex';
+            document.getElementById('ob-room-code').textContent = _roomCode;
+
+            // Show selected game info
+            const selectedGameId = localStorage.getItem('seduitMoiGameId');
+            if (selectedGameId) {
+                const gameNames = {
+                    'truth_dare': 'Vérité ou Défi',
+                    'roleplay': 'Jeu de Rôle',
+                    'flirty_questions': 'Questions Flirteuses',
+                    'couple_quiz': 'Quiz Couple',
+                    'would_you_rather': 'Tu préférerais'
+                };
+                const gameName = gameNames[selectedGameId] || selectedGameId;
+                document.getElementById('ob-game-info').textContent = `Jeu sélectionné: ${gameName}`;
+            }
+
+            // Mark Contact as offline-only
+            document.getElementById('card-contact').classList.add('offline-only');
+            document.getElementById('card-contact').onclick = () => {
+                const lang = userData ? userData.language : 'fr';
+                alert(lang === 'fr' ?
+                    'Ce jeu nécessite un contact physique — disponible en mode local seulement.' :
+                    'Jwèt sa a bezwen kontak fizik — disponib an mod lokal sèlman.');
+            };
+
+            // Add visual indicator for selected game
+            if (selectedGameId) {
+                const gameMapping = {
+                    'truth_dare': 'card-action-verite',
+                    'roleplay': 'card-apprend-moi',
+                    'flirty_questions': 'card-dis-moi',
+                    'couple_quiz': 'card-tictactoe',
+                    'would_you_rather': 'card-preferences'
+                };
+
+                const selectedCardId = gameMapping[selectedGameId];
+                if (selectedCardId) {
+                    const selectedCard = document.getElementById(selectedCardId);
+                    if (selectedCard) {
+                        selectedCard.style.boxShadow = '0 0 15px rgba(220,38,38,0.6)';
+                        selectedCard.style.border = '2px solid #dc2626';
+                        selectedCard.style.transform = 'scale(1.02)';
+                    }
+                }
+            }
+
+            // Connect Realtime Multiplayer Engine
+            if (window.seduitOnline) {
+                window.seduitOnline.init();
+                window.seduitOnline.roomCode = _roomCode;
+                window.seduitOnline.myRole = _myRole;
+
+                // Subscribe to room channel for presence & game events
+                window.seduitOnline.subscribeToRoom(_roomCode, {
+                    onPartnerJoined: function(presences) {
+                        const name = presences[0] && presences[0].name;
+                        if (name && userData) {
+                            if (_myRole === 'host') userData.name2 = name;
+                            else userData.name1 = name;
+                            saveUserData();
+                        }
+                        updateOnlineStatus();
+                    },
+                    onPresenceSync: function(players) {
+                        const other = players.find(p => p.player_id !== window.seduitOnline.myId);
+                        if (other && other.name && userData) {
+                            if (_myRole === 'host') userData.name2 = other.name;
+                            else userData.name1 = other.name;
+                            saveUserData();
+                        }
+                        updateOnlineStatus();
+                    }
+                });
+
+                // Watch database room table for guest updates
+                window.seduitOnline.watchForGuest(_roomCode, function(room) {
+                    if (room && room.guest_name && userData) {
+                        userData.name2 = room.guest_name;
+                        saveUserData();
+                        updateOnlineStatus();
+                    }
+                });
+            }
+
+            // Check if both players are connected
+            updateOnlineStatus();
+        } else {
+            // In-person / Local Mode
+            document.getElementById('online-banner').style.display = 'none';
+            displayNames();
+        }
+
+        function updateOnlineStatus() {
+            const lang = userData ? userData.language : 'fr';
+            const guestName = userData ? userData.name2 : null;
+            const hostName = userData ? userData.name1 : null;
+
+            if (guestName && hostName && guestName !== hostName) {
+                document.getElementById('ob-status').innerHTML =
+                    `<span class="ob-partner">${_myRole === 'host' ? guestName : hostName}</span> ${lang === 'fr' ? 'est connecté(e)' : 'konekte'}`;
+                document.getElementById('ob-status').style.color = 'var(--success)';
+            } else {
+                document.getElementById('ob-status').textContent =
+                    lang === 'fr' ? 'En attente de votre partenaire...' : 'Ap tann patnè ou...';
+                document.getElementById('ob-status').style.color = 'var(--warning)';
+            }
+            displayNames();
+        }
+
+        // Navigate to game, passing room code if online
+        function goToGame(gameId) {
+            let url = `../games/${gameId}.html`;
+            if (_onlineMode && _roomCode) {
+                url += `?room=${_roomCode}`;
+                // If I am Host, sync navigation to Guest!
+                if (_myRole === 'host' && window.seduitChat) {
+                    window.seduitChat.broadcastHostNavigation(url);
+                }
+            }
+            window.location.href = url;
+        }
+
+        function leaveOnlineRoom() {
+            const lang = userData ? userData.language : 'fr';
+            if (confirm(lang === 'fr' ? 'Quitter la salle en ligne?' : 'Kite chanm lan?')) {
+                localStorage.removeItem('seduitMoiRoom');
+                localStorage.removeItem('seduitMoiRole');
+                window.location.href = 'intro.html';
+            }
+        }
+
+        function copyRoomLink() {
+            if (!_roomCode) return;
+            const base = window.location.origin + window.location.pathname.replace('pages/dashboard.html', '').replace('dashboard.html', '');
+            const shareURL = `${base}pages/auth.html?room=${_roomCode}`;
+            navigator.clipboard.writeText(shareURL).then(() => {
+                const btn = document.getElementById('btn-copy-room-link');
+                if (btn) {
+                    btn.innerHTML = '<i data-icon="check"></i> Copié !';
+                    if (typeof createIcons === 'function') createIcons();
+                    setTimeout(() => {
+                        btn.innerHTML = '<i data-icon="copy"></i> Copier le lien';
+                        if (typeof createIcons === 'function') createIcons();
+                    }, 2000);
+                }
+            });
+        }
+
+        function shareDashboardWhatsApp() {
+            if (!_roomCode) return;
+            const base = window.location.origin + window.location.pathname.replace('pages/dashboard.html', '').replace('dashboard.html', '');
+            const shareURL = `${base}pages/auth.html?room=${_roomCode}`;
+            const lang = (userData && userData.language) || 'fr';
+            const text = (lang === 'fr')
+                ? `🔥 Rejoins-moi sur Séduit Moi pour jouer ensemble en direct ! Clique ici : ${shareURL}`
+                : `🔥 Vin jwe avèm sou Séduit Moi an dirèk ! Klike sou lyen sa a pou n jwe : ${shareURL}`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        }
+    </script>
+</body>
+</html>

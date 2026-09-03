@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hot</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+    <script src=""></script>
+</head>
+<body>
+    <div class="container">
+        <div class="game-section">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h2 id="game-title">Hot</h2>
+                <p id="game-subtitle">Questions pour monter le niveau</p>
+            </div>
+
+            <div class="game-content">
+                <div id="introduction" class="introduction">
+                    <div class="question-card">
+                        <p id="intro-text">Cet espace est pour des questions plus intimes. Le niveau augmente progressivement.</p>
+                        <div class="warning">
+                            <i data-icon="flame"></i>
+                            <span id="warning-text">Pour adultes consentants</span>
+                        </div>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game btn-next" onclick="startHotGame()">
+                            <i data-icon="flame"></i>
+                            <span id="start-btn">Commencer</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="game-phase" class="game-phase hidden">
+                    <div class="intensity-meter">
+                        <div class="intensity-fill" id="intensity-fill"></div>
+                    </div>
+                    <div class="level-indicator">
+                        <span id="level-display">Niveau 1/5</span>
+                    </div>
+
+                    <div class="player-indicator">
+                        <p id="current-player">Tour de: <span id="player-name"></span></p>
+                    </div>
+
+                    <div class="question-card hot-question">
+                        <p id="hot-question" class="question-text"></p>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="skipQuestion()">
+                            <i data-icon="skip-forward"></i>
+                            <span id="skip-btn">Passer</span>
+                        </button>
+                        <button class="btn-game btn-next" onclick="nextQuestion()">
+                            <i data-icon="arrow-right"></i>
+                            <span id="next-btn">Question suivante</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="completion-phase" class="completion-phase hidden">
+                    <div class="question-card hot-question">
+                        <p id="completion-message">Vous avez atteint le niveau maximum!</p>
+                        <div class="final-level">
+                            <p id="final-level-display">Niveau final: 5</p>
+                        </div>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="restartGame()">
+                            <i data-icon="refresh-cw"></i>
+                            <span id="restart-btn">Recommencer</span>
+                        </button>
+                        <button class="btn-game btn-next" onclick="goBack()">
+                            <i data-icon="home"></i>
+                            <span id="home-btn">Retour</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/main.js?v=1.0"></script><script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/games/hot.js?v=1.0"></script>
+    <script>
+        createIcons();
+    </script>
+
+    <!-- Online Multiplayer Support -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/game-online-sync.js"></script>
+    <script src="../js/chat.js"></script>
+</body>
+</html>

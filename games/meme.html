@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nos Memes</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+</head>
+<body>
+    <div class="container">
+        <div class="game-section" style="max-width: 650px;">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h2 id="game-title">Nos Memes</h2>
+                <p id="game-subtitle">Riez ensemble de vos habitudes de couple</p>
+            </div>
+
+            <div class="game-content">
+                <div class="question-card">
+                    <p id="meme-situation" class="question-text" style="font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: 15px;"></p>
+                    
+                    <div id="meme-media-container" style="background: var(--surface-light); padding: 15px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; min-height: 250px; position: relative;">
+                        <!-- Generated memes loaded as image, or CSS illustration as fallback -->
+                        <img id="meme-image" src="" alt="Meme Image" style="max-width: 100%; max-height: 300px; object-fit: contain; border-radius: var(--radius); display: none;">
+                        
+                        <div id="meme-vector-fallback" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 15px; width: 100%; height: 100%; min-height: 200px;">
+                            <div id="vector-illustration" style="color: var(--primary); display: flex; align-items: center; justify-content: center;">
+                                <i data-icon="image" style="width: 64px; height: 64px;"></i>
+                            </div>
+                            <p id="vector-caption" style="font-size: 1rem; font-style: italic; color: var(--text-muted);"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="voting-buttons" class="game-buttons" style="margin-top: 15px; width: 100%;">
+                    <button class="btn-game" onclick="vote(true)" style="flex: 1; justify-content: center; background: var(--success); color: white;">
+                        <i data-icon="check"></i>
+                        <span id="vote-yes-text">Wi, se nou nèt!</span>
+                    </button>
+                    <button class="btn-game" onclick="vote(false)" style="flex: 1; justify-content: center; background: var(--danger); color: white;">
+                        <i data-icon="trash-2"></i>
+                        <span id="vote-no-text">Non, se pa nou!</span>
+                    </button>
+                </div>
+
+                <div id="vote-result" class="hidden" style="margin-top: 20px; padding: 15px; background: var(--background); border-radius: var(--radius); width: 100%; text-align: center; animation: fadeIn 0.4s ease;">
+                    <p id="result-text" style="font-size: 1.15rem; font-weight: 600; margin-bottom: 5px;"></p>
+                    <p id="compatibility-percent" style="font-size: 1.75rem; font-weight: 800; color: var(--primary);"></p>
+                </div>
+
+                <div class="game-buttons" style="margin-top: 20px;">
+                    <button class="btn-game btn-next" onclick="nextMeme()">
+                        <i data-icon="skip-forward"></i>
+                        <span id="next-btn-text">Meme Suivant</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/main.js?v=1.0"></script>
+    <script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/games/meme.js?v=1.0"></script>
+    <script>
+        createIcons();
+    </script>
+
+    <!-- Online Multiplayer Support -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/game-online-sync.js"></script>
+    <script src="../js/chat.js"></script>
+</body>
+</html>

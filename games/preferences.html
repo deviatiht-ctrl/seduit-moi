@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Préférences</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+    <script src=""></script>
+</head>
+<body>
+    <div class="container">
+        <div class="game-section">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h2 id="game-title">Préférences</h2>
+                <p id="game-subtitle">Ce que vous préférez vraiment</p>
+            </div>
+
+            <div class="game-content">
+                <div id="player-selection" class="player-selection">
+                    <div class="player-indicator">
+                        <p id="select-player">Qui répond en premier?</p>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="selectPlayer(1)">
+                            <i data-icon="user"></i>
+                            <span id="player1-btn">Joueur 1</span>
+                        </button>
+                        <button class="btn-game" onclick="selectPlayer(2)">
+                            <i data-icon="user"></i>
+                            <span id="player2-btn">Joueur 2</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="preference-phase" class="preference-phase hidden">
+                    <div class="player-indicator">
+                        <p id="current-player">Tour de: <span id="player-name"></span></p>
+                    </div>
+
+                    <div class="question-card">
+                        <p id="preference-question" class="question-text"></p>
+                    </div>
+
+                    <div class="preference-options">
+                        <button class="btn-game preference-btn" onclick="selectOption(1)">
+                            <span id="option1"></span>
+                        </button>
+                        <button class="btn-game preference-btn" onclick="selectOption(2)">
+                            <span id="option2"></span>
+                        </button>
+                    </div>
+
+                    <div id="discussion-phase" class="discussion-phase hidden">
+                        <div class="question-card">
+                            <p id="discussion-text">Discutez de vos choix!</p>
+                        </div>
+
+                        <div class="game-buttons">
+                            <button class="btn-game btn-next" onclick="nextPreference()">
+                                <i data-icon="arrow-right"></i>
+                                <span id="next-btn">Suivant</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="completion-phase" class="completion-phase hidden">
+                    <div class="question-card">
+                        <p id="completion-message">Vous avez exploré vos préférences!</p>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="restartGame()">
+                            <i data-icon="refresh-cw"></i>
+                            <span id="restart-btn">Recommencer</span>
+                        </button>
+                        <button class="btn-game btn-next" onclick="goBack()">
+                            <i data-icon="home"></i>
+                            <span id="home-btn">Retour</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/main.js?v=1.0"></script><script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/games/preferences.js?v=1.0"></script>
+    <script>
+        createIcons();
+    </script>
+
+    <!-- Online Multiplayer Support -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/game-online-sync.js"></script>
+    <script src="../js/chat.js"></script>
+</body>
+</html>

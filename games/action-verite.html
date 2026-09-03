@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Action ou Vérité</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+    <script src=""></script>
+</head>
+<body>
+    <div class="container">
+        <div class="game-section">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h2 id="game-title">Action ou Vérité</h2>
+                <p id="game-subtitle">Le classique pour tous les moments</p>
+            </div>
+
+            <div class="game-content">
+                <div id="player-selection" class="player-selection">
+                    <div class="player-indicator">
+                        <p id="select-player">Sélectionnez le joueur qui commence</p>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="selectPlayer(1)">
+                            <i data-icon="user"></i>
+                            <span id="player1-btn">Joueur 1</span>
+                        </button>
+                        <button class="btn-game" onclick="selectPlayer(2)">
+                            <i data-icon="user"></i>
+                            <span id="player2-btn">Joueur 2</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="choice-phase" class="choice-phase hidden">
+                    <div class="player-indicator">
+                        <p id="current-turn">Tour de: <span id="current-player-name"></span></p>
+                    </div>
+
+                    <div class="question-card">
+                        <p id="choice-question">Action ou Vérité?</p>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="chooseAction()">
+                            <i data-icon="zap"></i>
+                            <span id="action-btn">Action</span>
+                        </button>
+                        <button class="btn-game btn-next" onclick="chooseVerite()">
+                            <i data-icon="message-circle"></i>
+                            <span id="verite-btn">Vérité</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="task-phase" class="task-phase hidden">
+                    <div class="player-indicator">
+                        <p id="task-player">Tour de: <span id="task-player-name"></span></p>
+                    </div>
+
+                    <div class="question-card">
+                        <p id="task-type" class="task-type"></p>
+                        <p id="task-content" class="task-content"></p>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="skipTask()">
+                            <i data-icon="skip-forward"></i>
+                            <span id="skip-btn">Passer</span>
+                        </button>
+                        <button class="btn-game btn-next" onclick="completeTask()">
+                            <i data-icon="check"></i>
+                            <span id="complete-btn">Accompli</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/main.js?v=1.0"></script><script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/games/action-verite.js?v=1.0"></script>
+    <script>
+        createIcons();
+    </script>
+
+    <!-- Online Multiplayer Support -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/game-online-sync.js"></script>
+    <script src="../js/chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apprends-moi à te connaître</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+    <script src=""></script>
+</head>
+<body>
+    <div class="container">
+        <div class="game-section">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h2 id="game-title">Apprends-moi à te connaître</h2>
+                <p id="game-subtitle">Questions pour mieux vous comprendre</p>
+            </div>
+
+            <div class="game-content">
+                <div id="player-selection" class="player-selection">
+                    <div class="player-indicator">
+                        <p id="select-player">Qui répond aux questions?</p>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="selectPlayer(1)">
+                            <i data-icon="user"></i>
+                            <span id="player1-btn">Joueur 1</span>
+                        </button>
+                        <button class="btn-game" onclick="selectPlayer(2)">
+                            <i data-icon="user"></i>
+                            <span id="player2-btn">Joueur 2</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="question-phase" class="question-phase hidden">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                        <span id="question-counter">1/20</span>
+                    </div>
+
+                    <div class="player-indicator">
+                        <p id="current-respondent">Répondant: <span id="respondent-name"></span></p>
+                    </div>
+
+                    <div class="question-card">
+                        <p id="question-text" class="question-text"></p>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="skipQuestion()">
+                            <i data-icon="skip-forward"></i>
+                            <span id="skip-btn">Passer</span>
+                        </button>
+                        <button class="btn-game btn-next" onclick="nextQuestion()">
+                            <i data-icon="arrow-right"></i>
+                            <span id="next-btn">Question suivante</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="completion-phase" class="completion-phase hidden">
+                    <div class="question-card">
+                        <p id="completion-message">Félicitations! Vous avez terminé toutes les questions.</p>
+                        <div class="completion-stats">
+                            <p id="questions-answered">Questions répondues: 0/20</p>
+                        </div>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="restartWithOtherPlayer()">
+                            <i data-icon="refresh-cw"></i>
+                            <span id="restart-btn">Recommencer avec l'autre joueur</span>
+                        </button>
+                        <button class="btn-game btn-next" onclick="goBack()">
+                            <i data-icon="home"></i>
+                            <span id="home-btn">Retour</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/main.js?v=1.0"></script><script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/games/apprend-moi.js?v=1.0"></script>
+    <script>
+        createIcons();
+    </script>
+
+    <!-- Online Multiplayer Support -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/game-online-sync.js"></script>
+    <script src="../js/chat.js"></script>
+</body>
+</html>

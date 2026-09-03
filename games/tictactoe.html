@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+    <script src=""></script>
+</head>
+<body>
+    <div class="container">
+        <div class="game-section">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h2 id="game-title">Tic-Tac-Toe</h2>
+                <p id="game-subtitle">Jeu de stratégie pour deux</p>
+            </div>
+
+            <div class="game-content">
+                <div class="game-status">
+                    <p id="current-turn-display">Tour de: <span id="current-player-display"></span></p>
+                </div>
+
+                <div class="tictactoe-board" id="board">
+                    <div class="tictactoe-cell" data-index="0" onclick="makeMove(0)"></div>
+                    <div class="tictactoe-cell" data-index="1" onclick="makeMove(1)"></div>
+                    <div class="tictactoe-cell" data-index="2" onclick="makeMove(2)"></div>
+                    <div class="tictactoe-cell" data-index="3" onclick="makeMove(3)"></div>
+                    <div class="tictactoe-cell" data-index="4" onclick="makeMove(4)"></div>
+                    <div class="tictactoe-cell" data-index="5" onclick="makeMove(5)"></div>
+                    <div class="tictactoe-cell" data-index="6" onclick="makeMove(6)"></div>
+                    <div class="tictactoe-cell" data-index="7" onclick="makeMove(7)"></div>
+                    <div class="tictactoe-cell" data-index="8" onclick="makeMove(8)"></div>
+                </div>
+
+                <div class="score-board">
+                    <div class="score-item">
+                        <span id="player1-name">Joueur 1 (X)</span>
+                        <span id="player1-score">0</span>
+                    </div>
+                    <div class="score-item">
+                        <span id="player2-name">Joueur 2 (O)</span>
+                        <span id="player2-score">0</span>
+                    </div>
+                </div>
+
+                <div id="game-result" class="game-result hidden">
+                    <div class="question-card">
+                        <p id="result-message"></p>
+                    </div>
+                </div>
+
+                <div class="game-buttons">
+                    <button class="btn-game" onclick="resetGame()">
+                        <i data-icon="refresh-cw"></i>
+                        <span id="reset-btn">Nouvelle partie</span>
+                    </button>
+                    <button class="btn-game" onclick="resetScores()">
+                        <i data-icon="trash-2"></i>
+                        <span id="reset-scores-btn">Réinitialiser scores</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/main.js?v=1.0"></script><script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/games/tictactoe.js?v=1.0"></script>
+    <script>
+        createIcons();
+    </script>
+
+    <!-- Online Multiplayer Support -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/game-online-sync.js"></script>
+    <script src="../js/chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dis moi ce que tu veux pas me dire</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+</head>
+<body>
+    <div class="container">
+        <div class="game-section">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h2 id="game-title">Dis moi ce que tu veux pas me dire</h2>
+                <p id="game-subtitle">Écrivez quelque chose, laissez l'autre deviner</p>
+            </div>
+
+            <div class="game-content">
+                <div id="write-phase" class="write-phase">
+                    <div class="player-indicator">
+                        <p id="current-player">Tour de: <span id="player-name"></span></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="write-label" for="secret-message">Écrivez ce que vous voulez dire mais ne pouvez pas dire à voix haute</label>
+                        <textarea id="secret-message" rows="4" placeholder="Votre message secret..."></textarea>
+                    </div>
+
+                    <button class="btn-primary" onclick="submitSecret()">
+                        <i data-icon="send"></i>
+                        <span id="btn-submit">Envoyer</span>
+                    </button>
+                </div>
+
+                <div id="guess-phase" class="guess-phase hidden">
+                    <div class="player-indicator">
+                        <p id="guesser-player">Tour de: <span id="guesser-name"></span></p>
+                    </div>
+
+                    <div class="question-card">
+                        <p id="hint-text">L'autre personne a écrit quelque chose...</p>
+                        <div class="letter-reveal" id="letter-reveal"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="guess-label" for="guess-input">Devinez ce que c'est</label>
+                        <input type="text" id="guess-input" placeholder="Votre devinette...">
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="revealLetter()">
+                            <i data-icon="eye"></i>
+                            <span id="btn-reveal">Révéler une lettre</span>
+                        </button>
+                        <button class="btn-game btn-next" onclick="submitGuess()">
+                            <i data-icon="check"></i>
+                            <span id="btn-guess">Soumettre devinette</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="result-phase" class="result-phase hidden">
+                    <div class="question-card">
+                        <p id="result-message"></p>
+                        <div class="reveal-animation" id="reveal-animation">
+                            <p id="secret-reveal" class="secret-reveal"></p>
+                        </div>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="resetGame()">
+                            <i data-icon="refresh-cw"></i>
+                            <span id="btn-reset">Rejouer</span>
+                        </button>
+                        <button class="btn-game btn-next" onclick="goBack()">
+                            <i data-icon="home"></i>
+                            <span id="btn-home">Retour</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/main.js?v=1.0"></script><script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/games/dis-moi.js?v=1.0"></script>
+    <script>
+        createIcons();
+    </script>
+
+    <!-- Online Multiplayer Support -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/game-online-sync.js"></script>
+    <script src="../js/chat.js"></script>
+</body>
+</html>

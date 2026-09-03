@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seduit Moi — Jouer à Distance</title>
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+    <style>
+        .lobby-wrap { max-width: 520px; width: 100%; }
+
+        /* Mode Toggle */
+        .mode-toggle { display: flex; gap: 0; margin-bottom: 30px; border-radius: 12px; overflow: hidden; border: 2px solid var(--surface-light); }
+        .mode-btn { flex: 1; padding: 14px; background: var(--surface); border: none; color: var(--text-muted); font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .mode-btn.active { background: linear-gradient(135deg, #dc2626, #991b1b); color: white; }
+
+        /* Panels */
+        .panel { background: var(--surface); border-radius: 14px; padding: 28px; margin-bottom: 20px; }
+        .panel h3 { font-size: 1.2rem; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+        .panel h3 .icon { font-size: 1.4rem; }
+
+        /* Room Code Display */
+        .room-code-display {
+            background: var(--background);
+            border: 2px dashed rgba(220,38,38,0.5);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin: 15px 0;
+        }
+        .room-code-big {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: 8px;
+            background: linear-gradient(135deg, #ff4444, #dc2626);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Courier New', monospace;
+        }
+        .room-code-sub { color: var(--text-muted); font-size: 0.85rem; margin-top: 8px; }
+
+        /* Share Link */
+        .share-link-box {
+            background: var(--background);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            word-break: break-all;
+            margin: 12px 0;
+            border: 1px solid var(--surface-light);
+        }
+
+        /* Status */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+        .status-waiting { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .status-connected { background: rgba(34,197,94,0.15); color: var(--success); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1.4s infinite; }
+
+        /* Online List */
+        .online-list { display: flex; flex-direction: column; gap: 10px; }
+        .online-player {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--background);
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+        .online-avatar {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1rem; color: white;
+            flex-shrink: 0;
+        }
+        .online-name { font-weight: 600; }
+        .online-room { color: var(--text-muted); font-size: 0.8rem; }
+        .online-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); margin-left: auto; flex-shrink: 0; }
+
+        /* Input */
+        .lobby-input { width: 100%; padding: 14px 16px; background: var(--background); border: 2px solid var(--surface-light); border-radius: 10px; color: var(--text); font-size: 1rem; margin-bottom: 14px; transition: border-color 0.2s; }
+        .lobby-input:focus { outline: none; border-color: #dc2626; }
+        .lobby-input.code-input { text-transform: uppercase; letter-spacing: 6px; font-size: 1.4rem; font-weight: 700; text-align: center; font-family: 'Courier New', monospace; }
+
+        /* Buttons */
+        .btn-lobby {
+            width: 100%; padding: 16px; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-lobby-primary { background: linear-gradient(135deg, #dc2626, #991b1b); color: white; }
+        .btn-lobby-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(220,38,38,0.4); }
+        .btn-lobby-secondary { background: var(--surface-light); color: var(--text); margin-top: 10px; }
+        .btn-lobby-secondary:hover { background: var(--surface); }
+        .btn-lobby:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+        /* Copy button */
+        .btn-copy { padding: 8px 16px; background: var(--surface-light); border: none; color: var(--text); border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; white-space: nowrap; }
+        .btn-copy:hover { background: var(--primary); color: white; }
+        .share-row { display: flex; gap: 10px; align-items: center; }
+
+        .error-msg { color: var(--danger); font-size: 0.9rem; margin-top: 8px; display: none; }
+        .loader { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:0.4 } }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lobby-wrap">
+            <!-- Header -->
+            <div class="header" style="margin-bottom:20px;">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+                <div></div>
+            </div>
+
+            <h2 style="text-align:center; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:10px;"><i data-icon="globe"></i> Jouer à Distance</h2>
+            <p style="text-align:center; color:var(--text-muted); margin-bottom:24px;">Jouez avec quelqu'un de loin en partageant un lien</p>
+
+            <!-- Mode Toggle -->
+            <div class="mode-toggle">
+                <button class="mode-btn active" id="btn-create-tab" onclick="showTab('create')" style="display:inline-flex; align-items:center; justify-content:center; gap:8px;"><i data-icon="sparkles"></i> Créer une salle</button>
+                <button class="mode-btn" id="btn-join-tab" onclick="showTab('join')" style="display:inline-flex; align-items:center; justify-content:center; gap:8px;"><i data-icon="link"></i> Rejoindre</button>
+            </div>
+
+            <!-- === CREATE PANEL === -->
+            <div id="create-panel">
+                <!-- Step 1: Enter name -->
+                <div id="create-step1" class="panel">
+                    <h3><span class="icon"><i data-icon="user"></i></span> Votre prénom</h3>
+                    <input class="lobby-input" id="create-name" placeholder="Entrez votre prénom..." maxlength="20">
+                    <p class="error-msg" id="create-name-error">Veuillez entrer votre prénom</p>
+                    <button class="btn-lobby btn-lobby-primary" onclick="createRoom()">
+                        <span id="create-btn-text">Créer ma salle</span>
+                    </button>
+                </div>
+
+                <!-- Step 2: Room created, share link -->
+                <div id="create-step2" class="hidden">
+                    <div class="panel">
+                        <h3><span class="icon"><i data-icon="award"></i></span> Salle créée !</h3>
+                        <div class="room-code-display">
+                            <div class="room-code-big" id="room-code-display">------</div>
+                            <div class="room-code-sub">Code de votre salle</div>
+                        </div>
+                        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:10px;">Partagez ce lien avec votre partenaire :</p>
+                        <div class="share-row">
+                            <div class="share-link-box" id="share-link-text" style="flex:1;"></div>
+                            <button class="btn-copy" onclick="copyLink()" id="copy-btn" style="display:inline-flex; align-items:center; gap:6px;"><i data-icon="copy"></i> Copier</button>
+                        </div>
+
+                        <button class="btn-lobby" onclick="shareWhatsApp()" style="background:#25D366; color:white; margin-top:10px; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                            <span id="txt-share-wa">Partager sur WhatsApp</span>
+                        </button>
+
+                        <div class="status-pill status-waiting" id="status-pill-box">
+                            <span class="status-dot"></span>
+                            <span id="waiting-text">En attente de votre partenaire...</span>
+                        </div>
+
+                        <button class="btn-lobby btn-lobby-primary" onclick="startOnlineGame()" style="margin-top:16px; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                            <i data-icon="play"></i> Accéder au tableau de bord
+                        </button>
+                    </div>
+
+                    <div class="panel" id="partner-joined-panel" style="display:none; background:rgba(34,197,94,0.08); border:2px solid rgba(34,197,94,0.3);">
+                        <div style="text-align:center;">
+                            <div style="margin-bottom:10px; color:var(--success); display:flex; justify-content:center;"><i data-icon="check-circle" style="width:48px; height:48px;"></i></div>
+                            <p style="font-size:1.1rem; font-weight:700; color:var(--success);" id="partner-joined-msg">Partenaire connecté !</p>
+                            <button class="btn-lobby btn-lobby-primary" onclick="startOnlineGame()" style="margin-top:15px; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                                <i data-icon="play"></i> Commencer à jouer !
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- === JOIN PANEL === -->
+            <div id="join-panel" class="hidden">
+                <div class="panel">
+                    <h3><span class="icon"><i data-icon="link"></i></span> Rejoindre une salle</h3>
+                    <input class="lobby-input" id="join-name" placeholder="Votre prénom..." maxlength="20">
+                    <input class="lobby-input code-input" id="join-code" placeholder="A1B2C3" maxlength="6">
+                    <p class="error-msg" id="join-error">Salle introuvable ou complète</p>
+                    <button class="btn-lobby btn-lobby-primary" onclick="joinRoom()">
+                        <span id="join-btn-text">Rejoindre</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- === WHO'S ONLINE === -->
+            <div class="panel">
+                <h3><span class="icon"><i data-icon="users"></i></span> En ligne maintenant <span id="online-count" style="color:var(--success); font-size:0.9rem; margin-left:auto;"></span></h3>
+                <div class="online-list" id="online-list">
+                    <p style="color:var(--text-muted); font-size:0.9rem;">Chargement...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Live Invitation Modal Banner -->
+    <div id="invite-modal-overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:99999; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(5px);">
+        <div style="background:var(--surface); border:2px solid #dc2626; border-radius:20px; padding:24px; max-width:400px; width:100%; text-align:center; box-shadow:0 20px 50px rgba(220,38,38,0.5);">
+            <div style="width:64px; height:64px; border-radius:50%; margin:0 auto 12px; overflow:hidden; border:2px solid #dc2626;" id="invite-sender-avatar">
+                <img src="" style="width:100%; height:100%; object-fit:cover;" id="invite-avatar-img">
+            </div>
+            <h3 style="font-size:1.15rem; margin-bottom:6px;" id="invite-sender-name">Invitasyon!</h3>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;" id="invite-msg-text">Ou resevwa yon envitasyon pou rantre nan yon chanm!</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="declineInvitation()" style="flex:1; padding:12px; border:none; border-radius:10px; background:var(--surface-light); color:var(--text); font-weight:700; cursor:pointer;">Refize</button>
+                <button onclick="acceptInvitation()" style="flex:1; padding:12px; border:none; border-radius:10px; background:linear-gradient(135deg, #22c55e, #15803d); color:white; font-weight:700; cursor:pointer;">Aksepte & Antre</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/main.js?v=1.0"></script>
+    <script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/auth-helper.js"></script>
+    <script src="../js/online.js"></script>
+    <script>
+        createIcons();
+        loadUserData();
+
+        let currentRoomCode = null;
+        let pendingInviteRoom = null;
+
+        // Init engines
+        window.seduitOnline.init();
+        window.seduitAuth.getSession().then(session => {
+            if (session && session.user) {
+                window.seduitOnline.myId = session.user.id;
+            }
+            // Listen for live invitations
+            window.seduitOnline.listenForInvitations(handleIncomingInvite);
+        });
+
+        // Auto-detect room from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlRoom = urlParams.get('room');
+        const isCreated = urlParams.get('created');
+
+        if (urlRoom && isCreated) {
+            displayCreatedRoom(urlRoom);
+        } else if (urlRoom) {
+            showTab('join');
+            document.getElementById('join-code').value = urlRoom;
+            if (userData && userData.name1) {
+                document.getElementById('join-name').value = userData.name1;
+            }
+        }
+
+        // Subscribe to global presence
+        window.seduitOnline.subscribeToGlobalPresence(updateOnlineList);
+
+        function showTab(tab) {
+            document.getElementById('create-panel').classList.toggle('hidden', tab !== 'create');
+            document.getElementById('join-panel').classList.toggle('hidden', tab !== 'join');
+            document.getElementById('btn-create-tab').classList.toggle('active', tab === 'create');
+            document.getElementById('btn-join-tab').classList.toggle('active', tab === 'join');
+        }
+
+        function displayCreatedRoom(code) {
+            currentRoomCode = code;
+            document.getElementById('create-step1').classList.add('hidden');
+            document.getElementById('create-step2').classList.remove('hidden');
+            document.getElementById('room-code-display').textContent = code;
+            const shareUrl = buildShareURL(code);
+            document.getElementById('share-link-text').textContent = shareUrl;
+
+            // Watch for guest joining
+            window.seduitOnline.watchForGuest(code, (updatedRoom) => {
+                if (updatedRoom && updatedRoom.guest_name && updatedRoom.guest_name.trim() !== '') {
+                    const joinedPanel = document.getElementById('partner-joined-panel');
+                    const waitingText = document.getElementById('waiting-text');
+                    const statusBox = document.getElementById('status-pill-box');
+                    const lang = (userData && userData.language) || 'fr';
+
+                    if (joinedPanel) joinedPanel.style.display = 'block';
+                    if (waitingText) waitingText.textContent = (lang === 'fr' ? 'Partenaire connecté !' : 'Patnè a konekte !');
+                    if (statusBox) {
+                        statusBox.classList.remove('status-waiting');
+                        statusBox.classList.add('status-connected');
+                    }
+                    document.getElementById('partner-joined-msg').textContent = 
+                        (lang === 'fr' ? `🎉 ${updatedRoom.guest_name} a rejoint la salle !` : `🎉 ${updatedRoom.guest_name} konekte nan chanm nan !`);
+
+                    if (userData) {
+                        userData.name2 = updatedRoom.guest_name;
+                        saveUserData();
+                    }
+                }
+            });
+
+            createIcons();
+        }
+
+        async function createRoom() {
+            const name = document.getElementById('create-name').value.trim();
+            if (!name) {
+                document.getElementById('create-name-error').style.display = 'block';
+                return;
+            }
+            document.getElementById('create-name-error').style.display = 'none';
+
+            const btn = document.getElementById('create-btn-text');
+            btn.innerHTML = '<span class="loader"></span>';
+            document.querySelector('#create-step1 .btn-lobby').disabled = true;
+
+            try {
+                const lang = userData ? userData.language : 'fr';
+                const sit = userData ? userData.situation : 'date';
+                const code = await window.seduitOnline.createRoom(name, lang, sit);
+
+                if (userData) { userData.name1 = name; saveUserData(); }
+                displayCreatedRoom(code);
+
+            } catch(e) {
+                btn.textContent = 'Réessayer';
+                document.querySelector('#create-step1 .btn-lobby').disabled = false;
+                alert('Erreur: ' + e.message);
+            }
+        }
+
+        async function joinRoom() {
+            const name = document.getElementById('join-name').value.trim();
+            const code = document.getElementById('join-code').value.trim().toUpperCase();
+            const errEl = document.getElementById('join-error');
+            errEl.style.display = 'none';
+
+            if (!name || code.length < 6) {
+                errEl.textContent = (userData && userData.language === 'ht') ?
+                    'Tanpri antre non ou ak kòd la' : 'Entrez votre prénom et le code';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            const btn = document.getElementById('join-btn-text');
+            btn.innerHTML = '<span class="loader"></span>';
+            document.querySelector('#join-panel .btn-lobby').disabled = true;
+
+            try {
+                const room = await window.seduitOnline.joinRoom(code, name);
+                window.location.href = `dashboard.html?room=${code}`;
+            } catch(e) {
+                const lang = userData ? userData.language : 'fr';
+                const msgs = {
+                    room_not_found: lang === 'fr' ? 'Salle introuvable ou fermée' : 'Chanm pa jwenn oswa li fèmen',
+                    room_full: lang === 'fr' ? 'Salle déjà complète' : 'Chanm deja plen',
+                    join_failed: lang === 'fr' ? 'Erreur de connexion' : 'Erè koneksyon'
+                };
+                errEl.textContent = msgs[e.message] || 'Erreur: ' + e.message;
+                errEl.style.display = 'block';
+                btn.textContent = 'Réessayer';
+                document.querySelector('#join-panel .btn-lobby').disabled = false;
+            }
+        }
+
+        function startOnlineGame() {
+            const code = currentRoomCode || localStorage.getItem('seduitMoiRoom');
+            if (code) {
+                window.location.href = `dashboard.html?room=${code}`;
+            }
+        }
+
+        function buildShareURL(code) {
+            const base = window.location.origin + window.location.pathname.replace('pages/online-lobby.html', '').replace('online-lobby.html', '');
+            return `${base}pages/auth.html?room=${code}`;
+        }
+
+        function shareWhatsApp() {
+            const code = currentRoomCode || localStorage.getItem('seduitMoiRoom') || '';
+            const url = buildShareURL(code);
+            const lang = (userData && userData.language) || 'fr';
+            const text = (lang === 'fr')
+                ? `🔥 Rejoins-moi sur Séduit Moi pour jouer ensemble en direct ! Clique ici pour entrer dans la salle : ${url}`
+                : `🔥 Vin jwe avèm sou Séduit Moi an dirèk ! Klike sou lyen sa a pou w antre nan chanm nan : ${url}`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function copyLink() {
+            const url = buildShareURL(currentRoomCode || '');
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.getElementById('copy-btn');
+                btn.innerHTML = '<i data-icon="check"></i> Copié !';
+                createIcons();
+                setTimeout(() => { 
+                    btn.innerHTML = '<i data-icon="copy"></i> Copier';
+                    createIcons();
+                }, 2000);
+            });
+        }
+
+        function updateOnlineList(players) {
+            const list = document.getElementById('online-list');
+            const count = document.getElementById('online-count');
+            const lang = userData ? userData.language : 'fr';
+
+            if (!players || players.length === 0) {
+                list.innerHTML = `<p style="color:var(--text-muted); font-size:0.9rem;">${lang === 'fr' ? 'Personne en ligne' : 'Pesonn an ligne'}</p>`;
+                count.textContent = '';
+                return;
+            }
+
+            count.textContent = `(${players.length})`;
+            list.innerHTML = players.map(p => {
+                const isMe = (p.player_id === window.seduitOnline.myId);
+                const avatar = p.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name || 'P')}&background=dc2626&color=fff`;
+                const roomInfo = p.room ? (lang === 'fr' ? `Salle ${p.room}` : `Chanm ${p.room}`) : (lang === 'fr' ? 'Navigation' : 'Navigasyon');
+
+                let inviteBtnHtml = '';
+                if (!isMe && currentRoomCode) {
+                    inviteBtnHtml = `<button onclick="sendDirectInvite('${p.player_id}', this)" style="background:var(--surface-light); border:1px solid rgba(255,255,255,0.15); color:var(--text); padding:4px 10px; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer; margin-left:auto;">Enviter</button>`;
+                }
+
+                return `
+                    <div class="online-player">
+                        <div class="online-avatar" style="overflow:hidden;">
+                            <img src="${avatar}" style="width:100%;height:100%;object-fit:cover;">
+                        </div>
+                        <div>
+                            <div class="online-name">${p.name || 'Joueur'} ${isMe ? '(Ou)' : ''}</div>
+                            <div class="online-room">${roomInfo}</div>
+                        </div>
+                        ${inviteBtnHtml ? inviteBtnHtml : '<div class="online-dot" style="margin-left:auto;"></div>'}
+                    </div>`;
+            }).join('');
+        }
+
+        async function sendDirectInvite(receiverId, btnEl) {
+            if (!currentRoomCode) {
+                alert('Veuillez d\'abord créer une salle !');
+                return;
+            }
+            btnEl.textContent = 'Envoi...';
+            try {
+                await window.seduitOnline.sendInvitation(receiverId, currentRoomCode);
+                btnEl.textContent = '✅ Envité !';
+                btnEl.style.borderColor = 'var(--success)';
+            } catch(e) {
+                btnEl.textContent = 'Erreur';
+            }
+        }
+
+        function handleIncomingInvite(invite) {
+            pendingInviteRoom = invite.room_code;
+            const lang = userData ? userData.language : 'fr';
+
+            document.getElementById('invite-sender-name').textContent = invite.sender_name || 'Un ami';
+            document.getElementById('invite-avatar-img').src = invite.sender_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(invite.sender_name || 'P')}&background=dc2626&color=fff`;
+            document.getElementById('invite-msg-text').textContent = (lang === 'fr' ?
+                `${invite.sender_name} vous invite à jouer dans la salle ${invite.room_code} !` :
+                `${invite.sender_name} envite w pou n jwe ansanm nan chanm ${invite.room_code}!`);
+
+            document.getElementById('invite-modal-overlay').style.display = 'flex';
+        }
+
+        function acceptInvitation() {
+            if (pendingInviteRoom) {
+                window.location.href = `dashboard.html?room=${pendingInviteRoom}`;
+            }
+        }
+
+        function declineInvitation() {
+            document.getElementById('invite-modal-overlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Défi Stickers</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+</head>
+<body>
+    <div class="container">
+        <div class="game-section">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h2 id="game-title">Défi Stickers</h2>
+                <p id="game-subtitle">Exprimez vos sentiments avec nos stickers</p>
+            </div>
+
+            <div class="game-content">
+                <div class="player-indicator">
+                    <p id="turn-indicator">Tour de: <span id="player-name"></span></p>
+                </div>
+
+                <div class="question-card">
+                    <p id="prompt-text" class="question-text">Chargeant le défi...</p>
+                </div>
+
+                <div class="stickers-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; width: 100%;">
+                    <div class="sticker-card" onclick="selectSticker(1)" style="background: var(--surface-light); padding: 10px; border-radius: var(--radius); cursor: pointer; text-align: center; border: 2px solid transparent; transition: all 0.3s ease;">
+                        <img src="../images/stickers/love_cat.png" alt="Love Cat" style="width: 100px; height: 100px; object-fit: contain; border-radius: var(--radius);">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;" id="sticker-label-1">Câlin / Kalo</p>
+                    </div>
+                    <div class="sticker-card" onclick="selectSticker(2)" style="background: var(--surface-light); padding: 10px; border-radius: var(--radius); cursor: pointer; text-align: center; border: 2px solid transparent; transition: all 0.3s ease;">
+                        <img src="../images/stickers/love_kiss.png" alt="Love Kiss" style="width: 100px; height: 100px; object-fit: contain; border-radius: var(--radius);">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;" id="sticker-label-2">Bisou / Bisou</p>
+                    </div>
+                    <div class="sticker-card" onclick="selectSticker(3)" style="background: var(--surface-light); padding: 10px; border-radius: var(--radius); cursor: pointer; text-align: center; border: 2px solid transparent; transition: all 0.3s ease;">
+                        <img src="../images/stickers/playful_wink.png" alt="Playful Wink" style="width: 100px; height: 100px; object-fit: contain; border-radius: var(--radius);">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;" id="sticker-label-3">Flirt / Dous</p>
+                    </div>
+                    <div class="sticker-card" onclick="selectSticker(4)" style="background: var(--surface-light); padding: 10px; border-radius: var(--radius); cursor: pointer; text-align: center; border: 2px solid transparent; transition: all 0.3s ease;">
+                        <img src="../images/stickers/funny_dog.png" alt="Funny Puppy" style="width: 100px; height: 100px; object-fit: contain; border-radius: var(--radius);">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;" id="sticker-label-4">Choc / Sezi</p>
+                    </div>
+                </div>
+
+                <div id="reaction-area" class="hidden" style="margin-top: 15px; text-align: center; animation: fadeIn 0.5s ease;">
+                    <p id="reaction-message" style="font-size: 1.2rem; font-weight: 600; color: var(--primary);"></p>
+                </div>
+
+                <div class="game-buttons" style="margin-top: 20px;">
+                    <button class="btn-game btn-next" onclick="nextPrompt()">
+                        <i data-icon="skip-forward"></i>
+                        <span id="next-btn-text">Suivant</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/main.js?v=1.0"></script>
+    <script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/games/stickers.js?v=1.0"></script>
+    <script>
+        createIcons();
+    </script>
+
+    <!-- Online Multiplayer Support -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/game-online-sync.js"></script>
+    <script src="../js/chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devinettes</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="../css/style.css?v=1.0">
+    <script src=""></script>
+</head>
+<body>
+    <div class="container">
+        <div class="game-section">
+            <div class="header">
+                <button class="btn-back" onclick="goBack()">
+                    <i data-icon="arrow-left"></i>
+                </button>
+                <div class="logo-small">
+                    <i data-icon="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h2 id="game-title">Devinettes</h2>
+                <p id="game-subtitle">Testez votre intuition</p>
+            </div>
+
+            <div class="game-content">
+                <div id="player-selection" class="player-selection">
+                    <div class="player-indicator">
+                        <p id="select-player">Qui commence?</p>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="selectPlayer(1)">
+                            <i data-icon="user"></i>
+                            <span id="player1-btn">Joueur 1</span>
+                        </button>
+                        <button class="btn-game" onclick="selectPlayer(2)">
+                            <i data-icon="user"></i>
+                            <span id="player2-btn">Joueur 2</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="riddle-phase" class="riddle-phase hidden">
+                    <div class="player-indicator">
+                        <p id="current-player">Tour de: <span id="player-name"></span></p>
+                    </div>
+
+                    <div class="question-card">
+                        <p id="riddle-text" class="question-text"></p>
+                        <div class="hint-section">
+                            <button class="btn-game" onclick="showHint()">
+                                <i data-icon="lightbulb"></i>
+                                <span id="hint-btn">Indice</span>
+                            </button>
+                            <p id="hint-text" class="hint-text hidden"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="answer-label" for="answer-input">Votre réponse</label>
+                        <input type="text" id="answer-input" placeholder="Votre réponse...">
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="skipRiddle()">
+                            <i data-icon="skip-forward"></i>
+                            <span id="skip-btn">Passer</span>
+                        </button>
+                        <button class="btn-game btn-next" onclick="submitAnswer()">
+                            <i data-icon="check"></i>
+                            <span id="submit-btn">Vérifier</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="result-phase" class="result-phase hidden">
+                    <div class="question-card">
+                        <p id="result-message"></p>
+                        <p id="correct-answer" class="correct-answer"></p>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game" onclick="nextRiddle()">
+                            <i data-icon="arrow-right"></i>
+                            <span id="next-btn">Devinette suivante</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/main.js?v=1.0"></script><script src="../js/icons.js?v=1.0"></script>
+    <script src="../js/games/devinettes.js?v=1.0"></script>
+    <script>
+        createIcons();
+    </script>
+
+    <!-- Online Multiplayer Support -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/game-online-sync.js"></script>
+    <script src="../js/chat.js"></script>
+</body>
+</html>

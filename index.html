@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seduit Moi - Jeu de Séduction & Complicité</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="css/style.css?v=2.0">
+</head>
+<body>
+    <div class="container">
+        <div class="onboarding-card">
+            <!-- Top Bar: Logo, Language Toggle & Skip -->
+            <div class="onboarding-top">
+                <div class="brand-mini">
+                    <i data-lucide="heart"></i>
+                    <span>Seduit Moi</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="lang-toggle">
+                        <button type="button" id="btn-lang-fr" class="active" onclick="switchLanguage('fr')">FR</button>
+                        <button type="button" id="btn-lang-ht" onclick="switchLanguage('ht')">HT</button>
+                    </div>
+                    <button class="btn-skip" id="btn-skip" onclick="finishOnboarding()">Passer</button>
+                </div>
+            </div>
+
+            <!-- Slide 1: Welcome & Intimacy -->
+            <div class="onboarding-slide active" id="slide-0">
+                <div class="hero-icon-box pulse-glow">
+                    <i data-lucide="heart"></i>
+                </div>
+                <span class="onboarding-badge" id="slide0-badge">SÉDUIT MOI</span>
+                <h2 class="onboarding-title" id="slide0-title">Connectez & Séduisez</h2>
+                <p class="onboarding-desc" id="slide0-desc">
+                    Une expérience intime et complice conçue pour les couples, rendez-vous et amis. Brisez la glace, explorez vos désirs et renforcez votre flamme.
+                </p>
+            </div>
+
+            <!-- Slide 2: Modes of Play -->
+            <div class="onboarding-slide" id="slide-1">
+                <div class="hero-icon-box hero-icon-multi">
+                    <i data-lucide="smartphone"></i>
+                    <i data-lucide="globe" style="color:#f87171;"></i>
+                </div>
+                <span class="onboarding-badge" id="slide1-badge">2 MODES DE JEU</span>
+                <h2 class="onboarding-title" id="slide1-title">En Présentiel ou En Ligne</h2>
+                <p class="onboarding-desc" id="slide1-desc">
+                    Jouez côte à côte sur un seul smartphone, ou créez une salle privée en ligne et partagez le lien pour jouer en direct à distance !
+                </p>
+            </div>
+
+            <!-- Slide 3: 12 Games & Heat -->
+            <div class="onboarding-slide" id="slide-2">
+                <div class="hero-icon-box hero-icon-multi">
+                    <i data-lucide="flame" style="color:#f97316;"></i>
+                    <i data-lucide="sparkles" style="color:#ef4444;"></i>
+                </div>
+                <span class="onboarding-badge" id="slide2-badge">12 ACTIVITÉS UNIQUES</span>
+                <h2 class="onboarding-title" id="slide2-title">Sensations & Révélations</h2>
+                <p class="onboarding-desc" id="slide2-desc">
+                    Action ou Vérité, Questions Hot, Doux Mots, Défis, Tic-Tac-Toe, Devinettes... Prêt(e)s à pimenter votre complicité ?
+                </p>
+            </div>
+
+            <!-- Dots Indicator -->
+            <div class="onboarding-dots">
+                <div class="onboarding-dot active" onclick="goToSlide(0)"></div>
+                <div class="onboarding-dot" onclick="goToSlide(1)"></div>
+                <div class="onboarding-dot" onclick="goToSlide(2)"></div>
+            </div>
+
+            <!-- Bottom Navigation Buttons -->
+            <div class="onboarding-nav">
+                <button type="button" class="btn-onboarding-prev hidden" id="btn-prev" onclick="prevSlide()">
+                    <i data-lucide="arrow-left"></i>
+                    <span id="txt-prev">Retour</span>
+                </button>
+                <button type="button" class="btn-onboarding-next" id="btn-next" onclick="nextSlide()">
+                    <span id="txt-next">Suivant</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="js/lib/supabase-config.js"></script>
+    <script src="js/auth-helper.js"></script>
+    <script src="js/icons.js?v=1.0"></script>
+    <script src="js/main.js?v=2.0"></script>
+    <script>
+        // Onboarding Content Translations
+        const onboardingData = {
+            fr: {
+                skip: "Passer",
+                prev: "Retour",
+                next: "Suivant",
+                start: "Commencer",
+                slides: [
+                    {
+                        badge: "SÉDUIT MOI",
+                        title: "Connectez & Séduisez",
+                        desc: "Une expérience intime et complice conçue pour les couples, rendez-vous et amis. Brisez la glace, explorez vos désirs et renforcez votre flamme."
+                    },
+                    {
+                        badge: "2 MODES DE JEU",
+                        title: "En Présentiel ou En Ligne",
+                        desc: "Jouez côte à côte sur un seul smartphone, ou créez une salle privée en ligne et partagez le lien pour jouer en direct à distance !"
+                    },
+                    {
+                        badge: "12 ACTIVITÉS UNIQUES",
+                        title: "Sensations & Révélations",
+                        desc: "Action ou Vérité, Questions Hot, Doux Mots, Défis, Tic-Tac-Toe, Devinettes... Prêt(e)s à pimenter votre complicité ?"
+                    }
+                ]
+            },
+            ht: {
+                skip: "Sote",
+                prev: "Retou",
+                next: "Swivan",
+                start: "Kòmanse",
+                slides: [
+                    {
+                        badge: "SEDWI MWEN",
+                        title: "Konekte & Sedwi",
+                        desc: "Yon bèl eksperyans jwèt entim ak amizan pou koup, dat ak zanmi pwòch. Brize glas la, revele sekrè nou epi pataje bèl moman konplisite."
+                    },
+                    {
+                        badge: "2 FASON POU N JWE",
+                        title: "Fas-a-Fas oswa A Distans",
+                        desc: "Jwe ansanm sou yon sèl telefòn nan menm pyès la, oswa kreye yon chanm an liy epi voye lyen an bay patnè w pou n jwe a distans an tan reyèl !"
+                    },
+                    {
+                        badge: "12 JWÈT CHO & AMIZAN",
+                        title: "Pasyon & Moman Cho",
+                        desc: "Aksyon oswa Verite, Kesyon Cho (Hot), Dous Mo, Defi, Devinèt, Tic-Tac-Toe... Èske nou pare pou limen chalè a ?"
+                    }
+                ]
+            }
+        };
+
+        let currentSlide = 0;
+        let currentLang = 'fr';
+
+        // Check if language was already saved
+        const savedData = localStorage.getItem('seduitMoiData');
+        if (savedData) {
+            try {
+                const parsed = JSON.parse(savedData);
+                if (parsed.language) currentLang = parsed.language;
+            } catch(e) {}
+        }
+
+        // Room param check
+        const roomParam = new URLSearchParams(window.location.search).get('room');
+
+        function renderSlide() {
+            // Update slides visibility
+            for (let i = 0; i < 3; i++) {
+                const el = document.getElementById(`slide-${i}`);
+                if (el) el.classList.toggle('active', i === currentSlide);
+            }
+
+            // Update dots
+            const dots = document.querySelectorAll('.onboarding-dot');
+            dots.forEach((dot, idx) => {
+                dot.classList.toggle('active', idx === currentSlide);
+            });
+
+            // Update prev / next buttons
+            const btnPrev = document.getElementById('btn-prev');
+            const txtNext = document.getElementById('txt-next');
+            const t = onboardingData[currentLang];
+
+            if (currentSlide === 0) {
+                btnPrev.classList.add('hidden');
+            } else {
+                btnPrev.classList.remove('hidden');
+            }
+
+            if (currentSlide === 2) {
+                txtNext.textContent = t.start;
+            } else {
+                txtNext.textContent = t.next;
+            }
+
+            // Trigger Lucide icons
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        }
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('btn-lang-fr').classList.toggle('active', lang === 'fr');
+            document.getElementById('btn-lang-ht').classList.toggle('active', lang === 'ht');
+
+            const t = onboardingData[lang];
+            document.getElementById('btn-skip').textContent = t.skip;
+            document.getElementById('txt-prev').textContent = t.prev;
+
+            // Update slide texts
+            t.slides.forEach((s, idx) => {
+                const badge = document.getElementById(`slide${idx}-badge`);
+                const title = document.getElementById(`slide${idx}-title`);
+                const desc = document.getElementById(`slide${idx}-desc`);
+                if (badge) badge.textContent = s.badge;
+                if (title) title.textContent = s.title;
+                if (desc) desc.textContent = s.desc;
+            });
+
+            // Save in localStorage
+            let ud = {};
+            try { ud = JSON.parse(localStorage.getItem('seduitMoiData') || '{}'); } catch(e) {}
+            ud.language = lang;
+            localStorage.setItem('seduitMoiData', JSON.stringify(ud));
+
+            renderSlide();
+        }
+
+        function goToSlide(idx) {
+            currentSlide = idx;
+            renderSlide();
+        }
+
+        function nextSlide() {
+            if (currentSlide < 2) {
+                currentSlide++;
+                renderSlide();
+            } else {
+                finishOnboarding();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                renderSlide();
+            }
+        }
+
+        function finishOnboarding() {
+            localStorage.setItem('seduitMoiOnboarded', 'true');
+            const target = roomParam ? `?room=${encodeURIComponent(roomParam)}` : '';
+
+            // Check if user is already authenticated
+            if (window.seduitAuth) {
+                window.seduitAuth.getSession().then(session => {
+                    if (session && session.user) {
+                        if (roomParam) {
+                            window.location.href = `pages/dashboard.html${target}`;
+                        } else {
+                            window.location.href = 'pages/intro.html';
+                        }
+                    } else {
+                        window.location.href = `pages/auth.html${target}`;
+                    }
+                }).catch(() => {
+                    window.location.href = `pages/auth.html${target}`;
+                });
+            } else {
+                window.location.href = `pages/auth.html${target}`;
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            switchLanguage(currentLang);
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+
+            // If roomParam was provided and user already has an active session, skip onboarding
+            if (roomParam && window.seduitAuth) {
+                window.seduitAuth.getSession().then(session => {
+                    if (session && session.user) {
+                        window.location.href = `pages/dashboard.html?room=${encodeURIComponent(roomParam)}`;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
