@@ -16,36 +16,13 @@ CREATE TABLE IF NOT EXISTS seduis_moi_profiles (
     updated_at timestamptz DEFAULT now()
 );
 
--- 2. Retire ansyen trigger ki ka lakz pwoblèm
+-- 2. Retire tout trigger ki ka lakz pwoblèm sou auth.users
 DROP TRIGGER IF EXISTS on_seduis_moi_user_created ON auth.users;
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS seduis_moi_handle_new_user();
 
--- 3. Kreye function epi trigger otomatik (propye)
-CREATE OR REPLACE FUNCTION seduis_moi_handle_new_user()
-RETURNS trigger AS $$
-BEGIN
-    INSERT INTO seduis_moi_profiles (id, email, name, surname, gender, avatar_url)
-    VALUES (
-        NEW.id,
-        NEW.email,
-        COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
-        COALESCE(NEW.raw_user_meta_data->>'surname', ''),
-        COALESCE(NEW.raw_user_meta_data->>'gender', 'other'),
-        COALESCE(NEW.raw_user_meta_data->>'avatar_url', '')
-    )
-    ON CONFLICT (id) DO UPDATE SET
-        email = EXCLUDED.email,
-        name = COALESCE(EXCLUDED.name, seduis_moi_profiles.name),
-        avatar_url = COALESCE(EXCLUDED.avatar_url, seduis_moi_profiles.avatar_url);
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- 4. Kreye trigger an
-DROP TRIGGER IF EXISTS on_seduis_moi_user_created ON auth.users;
-CREATE TRIGGER on_seduis_moi_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION seduis_moi_handle_new_user();
+-- 3. Pa kreye trigger sou auth.users - pral jere pwofil nan kòd JS la
+-- Sa evite konfli ak lòt pwojè ki sou menm Supabase project
 
 -- 5. Kreye indexes
 CREATE INDEX IF NOT EXISTS idx_seduis_moi_profiles_email ON seduis_moi_profiles(email);

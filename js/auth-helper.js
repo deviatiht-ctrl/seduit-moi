@@ -63,18 +63,10 @@ class SeduitMoiAuth {
         const avatarUrl = avatarBase64 || this.getAvatarUrl(name);
 
         // Step 1: Create Supabase Auth account
-        // The DB trigger `on_auth_user_created` will automatically create the profile row
+        // Pa itilize options.data pou evite pwoblèm metadata
         const { data: authData, error: authError } = await this.client.auth.signUp({
             email,
-            password,
-            options: {
-                data: {
-                    name,
-                    surname: surname || '',
-                    gender: gender || 'other',
-                    avatar_url: avatarUrl
-                }
-            }
+            password
         });
 
         if (authError) {
@@ -87,31 +79,42 @@ class SeduitMoiAuth {
             throw new Error('Kont lan kreye men li bezwen verifikasyon email. Tcheke imèl ou.');
         }
 
-        // Step 2: Profile is created by DB trigger automatically.
-        // We also try an explicit upsert as fallback (in case trigger is not set up).
-        // We do NOT throw on this error — the trigger should handle it.
-        try {
-            const { error: profileError } = await this.client.from('seduis_moi_profiles').upsert({
-                id: user.id,
-                email: user.email,
-                name: name,
-                surname: surname || '',
-                gender: gender || 'other',
-                avatar_url: avatarUrl,
-                is_online: true,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'id' });
+        // Step 2: Kreye profil manuèlman apre signup
+        // Nou eseye plizyè fwa paske session yo pa ka prensipalman disponib dirèkteman
+        let profileCreated = false;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+                const { error: profileError } = await this.client.from('seduis_moi_profiles').upsert({
+                    id: user.id,
+                    email: user.email,
+                    name: name,
+                    surname: surname || '',
+                    gender: gender || 'other',
+                    avatar_url: avatarUrl,
+                    is_online: true,
+                    last_seen: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'id' });
 
-            if (profileError) {
-                console.warn('[SeduitAuth] Profile upsert non-fatal (trigger should handle it):', profileError.message);
+                if (!profileError) {
+                    profileCreated = true;
+                    break;
+                }
+
+                console.warn(`[SeduitAuth] Profile upsert attempt ${attempt + 1} failed:`, profileError.message);
+                await new Promise(resolve => setTimeout(resolve, 500));
+            } catch(e) {
+                console.warn(`[SeduitAuth] Profile upsert attempt ${attempt + 1} exception:`, e);
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
-        } catch(e) {
-            console.warn('[SeduitAuth] Profile upsert exception (non-fatal):', e);
         }
 
-        // Step 3: Load the profile (created by trigger or upsert)
-        // Wait a moment for the trigger to run
-        await new Promise(resolve => setTimeout(resolve, 600));
+        if (!profileCreated) {
+            console.warn('[SeduitAuth] Could not create profile, but auth user was created. Continuing...');
+        }
+
+        // Step 3: Load the profile
+        await new Promise(resolve => setTimeout(resolve, 300));
         await this.loadProfile(user.id);
 
         // Step 4: Store name immediately in localStorage so rest of app can use it
