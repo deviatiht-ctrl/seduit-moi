@@ -305,6 +305,8 @@
         if (targetRoom) {
             document.getElementById('room-notice-box').classList.remove('hidden');
             document.getElementById('target-room-code').textContent = targetRoom;
+            // Default to registration tab so invited friends create their account directly!
+            switchAuthTab('register');
         }
 
         function applyAuthLanguage(lang) {
@@ -328,7 +330,9 @@
             document.getElementById('google-btn-text').textContent = t.googleBtn;
 
             if (targetRoom) {
-                document.getElementById('room-notice-msg').textContent = `${t.roomNotice} ${targetRoom}`;
+                document.getElementById('room-notice-msg').innerHTML = (lang === 'fr')
+                    ? `💌 Vous êtes invité(e) dans la salle <b>${targetRoom}</b> ! Veuillez créer un compte ou vous connecter ci-dessous pour entrer dans la salle et jouer ensemble.`
+                    : `💌 Ou envite pou w jwe nan chanm <b>${targetRoom}</b> ! Tanpri kreye yon kont oswa konekte anba a pou w ka antre nan chanm nan epi jwe ansanm.`;
             }
 
             const btnFr = document.getElementById('auth-lang-fr');
@@ -340,9 +344,33 @@
         }
 
         // Check if already logged in
-        window.seduitAuth.getSession().then(session => {
+        window.seduitAuth.getSession().then(async session => {
             if (session && session.user) {
-                redirectAfterAuth();
+                if (targetRoom) {
+                    try {
+                        window.seduitOnline.init();
+                        const { data: room } = await window.seduitOnline.client
+                            .from('seduis_moi_rooms')
+                            .select('*')
+                            .eq('code', targetRoom)
+                            .single();
+
+                        if (room && room.host_player_id === session.user.id) {
+                            // Current user is the HOST who created this room
+                            const noticeMsg = document.getElementById('room-notice-msg');
+                            const lang = currentLang;
+                            noticeMsg.innerHTML = (lang === 'fr')
+                                ? `⚠️ Vous êtes l'hôte ayant créé la salle <b>${targetRoom}</b>. Pour tester en tant qu'invité, veuillez <a href="#" onclick="window.seduitAuth.logout()" style="color:#ef4444;text-decoration:underline;font-weight:bold;">vous déconnecter</a> ou ouvrir ce lien dans une <b>Fenêtre Navigation Privée (Incognito)</b>.`
+                                : `⚠️ Ou se lame ki kreye chanm <b>${targetRoom}</b> la. Pou w teste kòm patnè/envite, tanpri <a href="#" onclick="window.seduitAuth.logout()" style="color:#ef4444;text-decoration:underline;font-weight:bold;">dekonekte la</a> oswa louvri lyen an nan yon <b>Fenèt Prive (Incognito)</b>.`;
+                            return;
+                        }
+                    } catch(e) {
+                        console.warn('Room check error:', e);
+                    }
+                    await redirectAfterAuth();
+                } else {
+                    window.location.href = 'intro.html';
+                }
             }
         });
 
@@ -433,7 +461,11 @@
                 try {
                     if (window.seduitOnline) {
                         window.seduitOnline.init();
-                        const userName = localStorage.getItem('seduitMoiName') || 'Invité';
+                        let userName = localStorage.getItem('seduitMoiName');
+                        if (!userName && window.seduitAuth && window.seduitAuth.userProfile) {
+                            userName = window.seduitAuth.userProfile.name;
+                        }
+                        if (!userName) userName = 'Invité';
                         await window.seduitOnline.joinRoom(targetRoom, userName);
                     }
                 } catch(e) {

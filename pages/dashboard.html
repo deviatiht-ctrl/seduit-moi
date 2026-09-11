@@ -69,17 +69,38 @@
             </div>
 
             <!-- Online Mode Banner (shown only when room is active) -->
-            <div class="online-banner" id="online-banner" style="display:none; flex-wrap:wrap; gap:10px;">
+            <div class="online-banner" id="online-banner" style="display:none; flex-wrap:wrap; gap:10px; align-items:center;">
                 <div class="ob-dot"></div>
-                <div class="ob-info" style="flex:1; min-width:180px;">
-                    <div style="display:flex; align-items:center; gap:6px;"><i data-icon="globe" style="width:16px;height:16px;"></i> Mode en ligne — Salle <span class="ob-room" id="ob-room-code"></span></div>
-                    <div id="ob-game-info" style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;"></div>
-                    <div id="ob-status" class="ob-wait">En attente du partenaire...</div>
+                <div class="ob-info" style="flex:1; min-width:200px;">
+                    <div style="display:flex; align-items:center; gap:6px; font-weight:700;"><i data-icon="globe" style="width:16px;height:16px;"></i> Mode en ligne — Salle <span class="ob-room" id="ob-room-code" style="font-size:1.1rem; letter-spacing:1px; color:#ef4444; font-weight:800;"></span></div>
+                    <div id="ob-status" class="ob-wait" style="font-size:0.88rem;">En attente du partenaire...</div>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <button onclick="shareDashboardWhatsApp()" id="btn-wa-room-link" style="background:#25D366; border:none; color:white; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:6px;"><i data-icon="send"></i> WhatsApp</button>
-                    <button onclick="copyRoomLink()" id="btn-copy-room-link" style="background:var(--surface-light); border:1px solid rgba(255,255,255,0.15); color:var(--text); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:6px;"><i data-icon="copy"></i> Copier le lien</button>
-                    <button onclick="leaveOnlineRoom()" style="background:rgba(220,38,38,0.15); border:none; color:#ef4444; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:0.8rem; font-weight:600;">Quitter</button>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <button onclick="shareDashboardWhatsApp()" id="btn-wa-room-link" style="background:#25D366; border:none; color:white; border-radius:8px; padding:7px 12px; cursor:pointer; font-size:0.82rem; font-weight:600; display:inline-flex; align-items:center; gap:6px;"><i data-icon="send"></i> WhatsApp</button>
+                    <button onclick="copyRoomLink()" id="btn-copy-room-link" style="background:var(--surface-light); border:1px solid rgba(255,255,255,0.15); color:var(--text); border-radius:8px; padding:7px 12px; cursor:pointer; font-size:0.82rem; font-weight:600; display:inline-flex; align-items:center; gap:6px;"><i data-icon="copy"></i> Copier le lien</button>
+                    <button onclick="openOnlinePlayersModal()" id="btn-open-online-modal" style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); color:#60a5fa; border-radius:8px; padding:7px 12px; cursor:pointer; font-size:0.82rem; font-weight:600; display:inline-flex; align-items:center; gap:6px;"><i data-icon="users"></i> Envite Moun</button>
+                    <button onclick="leaveOnlineRoom()" style="background:rgba(220,38,38,0.15); border:none; color:#ef4444; border-radius:8px; padding:7px 12px; cursor:pointer; font-size:0.82rem; font-weight:600;">Quitter</button>
+                </div>
+            </div>
+
+            <!-- Partner Joined Celebration Banner -->
+            <div id="partner-connected-banner" style="display:none; background:rgba(34,197,94,0.12); border:2px solid rgba(34,197,94,0.4); border-radius:14px; padding:14px 18px; margin-bottom:20px; text-align:center;">
+                <div style="font-size:1.1rem; font-weight:800; color:#22c55e; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i data-icon="check-circle"></i> <span id="partner-joined-title">Patnè a konekte nan chanm nan !</span>
+                </div>
+                <p style="color:var(--text); font-size:0.9rem; margin-top:4px;" id="partner-joined-sub">Chwazi yon jwèt anba a pou n kòmanse jwe ansanm.</p>
+            </div>
+
+            <!-- Online Players Modal -->
+            <div id="online-players-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.75); z-index:99999; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(6px);">
+                <div style="background:var(--surface); border:1px solid rgba(255,255,255,0.15); border-radius:20px; padding:22px; max-width:440px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.6);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
+                        <h3 style="font-size:1.1rem; display:flex; align-items:center; gap:8px;"><i data-icon="users"></i> <span id="txt-modal-online-title">Moun ki an liy kounye a</span></h3>
+                        <button onclick="closeOnlinePlayersModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer; padding:4px 8px;">&times;</button>
+                    </div>
+                    <div id="modal-online-list" style="max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
+                        <p style="color:var(--text-muted); font-size:0.9rem; text-align:center;">Ap chache moun ki an liy...</p>
+                    </div>
                 </div>
             </div>
 
@@ -193,113 +214,117 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="../js/lib/supabase-config.js"></script>
+    <script src="../js/auth-helper.js"></script>
     <script src="../js/main.js?v=2.0"></script>
     <script src="../js/icons.js?v=1.0"></script>
     <script src="../js/online.js"></script>
     <script src="../js/chat.js"></script>
     <script>
-        createIcons();
-        loadUserData();
-
         // Detect online mode from URL ?room=CODE
         const _roomCode = new URLSearchParams(window.location.search).get('room')
                         || localStorage.getItem('seduitMoiRoom');
         const _onlineMode = !!_roomCode;
         const _myRole = localStorage.getItem('seduitMoiRole');
 
-        if (_onlineMode && _roomCode) {
-            // Show online banner
-            document.getElementById('online-banner').style.display = 'flex';
-            document.getElementById('ob-room-code').textContent = _roomCode;
+        async function initDashboard() {
+            createIcons();
+            loadUserData();
 
-            // Show selected game info
-            const selectedGameId = localStorage.getItem('seduitMoiGameId');
-            if (selectedGameId) {
-                const gameNames = {
-                    'truth_dare': 'Vérité ou Défi',
-                    'roleplay': 'Jeu de Rôle',
-                    'flirty_questions': 'Questions Flirteuses',
-                    'couple_quiz': 'Quiz Couple',
-                    'would_you_rather': 'Tu préférerais'
-                };
-                const gameName = gameNames[selectedGameId] || selectedGameId;
-                document.getElementById('ob-game-info').textContent = `Jeu sélectionné: ${gameName}`;
-            }
-
-            // Mark Contact as offline-only
-            document.getElementById('card-contact').classList.add('offline-only');
-            document.getElementById('card-contact').onclick = () => {
-                const lang = userData ? userData.language : 'fr';
-                alert(lang === 'fr' ?
-                    'Ce jeu nécessite un contact physique — disponible en mode local seulement.' :
-                    'Jwèt sa a bezwen kontak fizik — disponib an mod lokal sèlman.');
-            };
-
-            // Add visual indicator for selected game
-            if (selectedGameId) {
-                const gameMapping = {
-                    'truth_dare': 'card-action-verite',
-                    'roleplay': 'card-apprend-moi',
-                    'flirty_questions': 'card-dis-moi',
-                    'couple_quiz': 'card-tictactoe',
-                    'would_you_rather': 'card-preferences'
-                };
-
-                const selectedCardId = gameMapping[selectedGameId];
-                if (selectedCardId) {
-                    const selectedCard = document.getElementById(selectedCardId);
-                    if (selectedCard) {
-                        selectedCard.style.boxShadow = '0 0 15px rgba(220,38,38,0.6)';
-                        selectedCard.style.border = '2px solid #dc2626';
-                        selectedCard.style.transform = 'scale(1.02)';
+            if (_onlineMode && _roomCode) {
+                // Strict Auth Guard: User MUST have an account and be logged in to be in online room!
+                if (window.seduitAuth) {
+                    const session = await window.seduitAuth.getSession();
+                    if (!session || !session.user) {
+                        window.location.href = `auth.html?room=${encodeURIComponent(_roomCode)}`;
+                        return;
                     }
                 }
-            }
 
-            // Connect Realtime Multiplayer Engine
-            if (window.seduitOnline) {
-                window.seduitOnline.init();
-                window.seduitOnline.roomCode = _roomCode;
-                window.seduitOnline.myRole = _myRole;
+                // Show online banner
+                document.getElementById('online-banner').style.display = 'flex';
+                document.getElementById('ob-room-code').textContent = _roomCode;
 
-                // Subscribe to room channel for presence & game events
-                window.seduitOnline.subscribeToRoom(_roomCode, {
-                    onPartnerJoined: function(presences) {
-                        const name = presences[0] && presences[0].name;
-                        if (name && userData) {
-                            if (_myRole === 'host') userData.name2 = name;
-                            else userData.name1 = name;
-                            saveUserData();
+                // Mark Contact as offline-only
+                document.getElementById('card-contact').classList.add('offline-only');
+                document.getElementById('card-contact').onclick = () => {
+                    const lang = userData ? userData.language : 'fr';
+                    alert(lang === 'fr' ?
+                        'Ce jeu nécessite un contact physique — disponible en mode local seulement.' :
+                        'Jwèt sa a bezwen kontak fizik — disponib an mod lokal sèlman.');
+                };
+
+                // Connect Realtime Multiplayer Engine
+                if (window.seduitOnline) {
+                    window.seduitOnline.init();
+                    window.seduitOnline.roomCode = _roomCode;
+                    window.seduitOnline.myRole = _myRole;
+
+                    // Subscribe to room channel for presence & game events
+                    window.seduitOnline.subscribeToRoom(_roomCode, {
+                        onPartnerJoined: function(presences) {
+                            const name = presences[0] && presences[0].name;
+                            if (name && userData) {
+                                if (_myRole === 'host') userData.name2 = name;
+                                else userData.name1 = name;
+                                saveUserData();
+                            }
+                            handlePartnerJoined(name);
+                        },
+                        onPresenceSync: function(players) {
+                            const other = players.find(p => p.player_id !== window.seduitOnline.myId);
+                            if (other && other.name && userData) {
+                                if (_myRole === 'host') userData.name2 = other.name;
+                                else userData.name1 = other.name;
+                                saveUserData();
+                                handlePartnerJoined(other.name);
+                            }
                         }
-                        updateOnlineStatus();
-                    },
-                    onPresenceSync: function(players) {
-                        const other = players.find(p => p.player_id !== window.seduitOnline.myId);
-                        if (other && other.name && userData) {
-                            if (_myRole === 'host') userData.name2 = other.name;
-                            else userData.name1 = other.name;
+                    });
+
+                    // Watch database room table for guest updates
+                    window.seduitOnline.watchForGuest(_roomCode, function(room) {
+                        if (room && room.guest_name && userData) {
+                            userData.name2 = room.guest_name;
                             saveUserData();
+                            handlePartnerJoined(room.guest_name);
                         }
-                        updateOnlineStatus();
-                    }
-                });
+                    });
 
-                // Watch database room table for guest updates
-                window.seduitOnline.watchForGuest(_roomCode, function(room) {
-                    if (room && room.guest_name && userData) {
-                        userData.name2 = room.guest_name;
-                        saveUserData();
-                        updateOnlineStatus();
-                    }
-                });
+                    // Track global presence for online player list
+                    window.seduitOnline.subscribeToGlobalPresence(renderOnlineModalList);
+                }
+
+                updateOnlineStatus();
+            } else {
+                // In-person / Local Mode
+                document.getElementById('online-banner').style.display = 'none';
+                displayNames();
             }
+        }
+        initDashboard();
 
-            // Check if both players are connected
+        function handlePartnerJoined(partnerName) {
+            if (!partnerName) return;
+            const banner = document.getElementById('partner-connected-banner');
+            const title = document.getElementById('partner-joined-title');
+            const sub = document.getElementById('partner-joined-sub');
+            const lang = (userData && userData.language) || 'fr';
+
+            if (banner) {
+                banner.style.display = 'block';
+                if (title) {
+                    title.textContent = (lang === 'fr')
+                        ? `🎉 ${partnerName} a rejoint la salle !`
+                        : `🎉 ${partnerName} konekte nan chanm nan !`;
+                }
+                if (sub) {
+                    sub.textContent = (lang === 'fr')
+                        ? (_myRole === 'host' ? `Vous êtes l'hôte. Choisissez un jeu ci-dessous pour commencer !` : `Attendez que l'hôte choisisse un jeu...`)
+                        : (_myRole === 'host' ? `Ou se lame a. Chwazi yon jwèt anba a pou n kòmanse !` : `Rete tann lame a chwazi yon jwèt...`);
+                }
+                createIcons();
+            }
             updateOnlineStatus();
-        } else {
-            // In-person / Local Mode
-            document.getElementById('online-banner').style.display = 'none';
-            displayNames();
         }
 
         function updateOnlineStatus() {
@@ -313,7 +338,7 @@
                 document.getElementById('ob-status').style.color = 'var(--success)';
             } else {
                 document.getElementById('ob-status').textContent =
-                    lang === 'fr' ? 'En attente de votre partenaire...' : 'Ap tann patnè ou...';
+                    lang === 'fr' ? 'En attente de votre partenaire...' : 'Ap tann patnè ou rantre nan chanm nan...';
                 document.getElementById('ob-status').style.color = 'var(--warning)';
             }
             displayNames();
@@ -341,10 +366,14 @@
             }
         }
 
+        function buildShareURL(code) {
+            const base = window.location.origin + window.location.pathname.replace('pages/dashboard.html', '').replace('dashboard.html', '');
+            return `${base}pages/auth.html?room=${code}`;
+        }
+
         function copyRoomLink() {
             if (!_roomCode) return;
-            const base = window.location.origin + window.location.pathname.replace('pages/dashboard.html', '').replace('dashboard.html', '');
-            const shareURL = `${base}pages/auth.html?room=${_roomCode}`;
+            const shareURL = buildShareURL(_roomCode);
             navigator.clipboard.writeText(shareURL).then(() => {
                 const btn = document.getElementById('btn-copy-room-link');
                 if (btn) {
@@ -360,13 +389,58 @@
 
         function shareDashboardWhatsApp() {
             if (!_roomCode) return;
-            const base = window.location.origin + window.location.pathname.replace('pages/dashboard.html', '').replace('dashboard.html', '');
-            const shareURL = `${base}pages/auth.html?room=${_roomCode}`;
+            const shareURL = buildShareURL(_roomCode);
             const lang = (userData && userData.language) || 'fr';
             const text = (lang === 'fr')
-                ? `🔥 Rejoins-moi sur Séduit Moi pour jouer ensemble en direct ! Clique ici : ${shareURL}`
-                : `🔥 Vin jwe avèm sou Séduit Moi an dirèk ! Klike sou lyen sa a pou n jwe : ${shareURL}`;
+                ? `🔥 Rejoins-moi sur Séduit Moi pour jouer ensemble en direct ! Clique ici pour te connecter et entrer dans la salle : ${shareURL}`
+                : `🔥 Vin jwe avèm sou Séduit Moi an dirèk ! Klike sou lyen sa a pou w enskri/konekte epi w ap tou antre nan chanm nan : ${shareURL}`;
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function openOnlinePlayersModal() {
+            const modal = document.getElementById('online-players-modal');
+            if (modal) modal.style.display = 'flex';
+            createIcons();
+        }
+
+        function closeOnlinePlayersModal() {
+            const modal = document.getElementById('online-players-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function renderOnlineModalList(players) {
+            const container = document.getElementById('modal-online-list');
+            if (!container) return;
+            const lang = (userData && userData.language) || 'fr';
+
+            const otherPlayers = (players || []).filter(p => p.player_id !== window.seduitOnline.myId);
+            if (otherPlayers.length === 0) {
+                container.innerHTML = `<p style="color:var(--text-muted); font-size:0.9rem; text-align:center; padding:15px;">${lang === 'fr' ? 'Aucun autre joueur en ligne pour le moment' : 'Pa gen lòt jwè an liy pou kounye a'}</p>`;
+                return;
+            }
+
+            container.innerHTML = otherPlayers.map(p => `
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--surface-light); border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:10px; height:10px; border-radius:50%; background:#22c55e;"></div>
+                        <span style="font-weight:700; font-size:0.95rem;">${p.name || 'Joueur'}</span>
+                    </div>
+                    <button onclick="invitePlayer('${p.player_id}', '${(p.name || '').replace(/'/g, "\\'")}')" style="background:var(--primary); color:white; border:none; border-radius:8px; padding:6px 14px; font-size:0.82rem; font-weight:700; cursor:pointer;">
+                        ${lang === 'fr' ? 'Inviter' : 'Envite'}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function invitePlayer(recipientId, recipientName) {
+            const lang = (userData && userData.language) || 'fr';
+            try {
+                await window.seduitOnline.sendInvitation(recipientId, _roomCode);
+                alert(lang === 'fr' ? `Invitation envoyée à ${recipientName} !` : `Envitasyon voye bay ${recipientName} !`);
+                closeOnlinePlayersModal();
+            } catch(e) {
+                alert('Erreur: ' + e.message);
+            }
         }
     </script>
 </body>

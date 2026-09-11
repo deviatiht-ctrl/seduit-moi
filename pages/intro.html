@@ -177,17 +177,6 @@
                 </button>
             </div>
 
-            <!-- Invitations Panel (if any pending) -->
-            <div id="invitations-panel" style="display:none; margin-bottom:16px;">
-                <div style="background:rgba(220,38,38,0.1); border:1px solid rgba(220,38,38,0.3); border-radius:12px; padding:12px;">
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; color:#ef4444; font-weight:700; font-size:0.9rem;">
-                        <i data-lucide="bell" style="width:18px;height:18px;"></i>
-                        <span id="invitations-title">Invitations en attente</span>
-                    </div>
-                    <div id="invitations-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-                </div>
-            </div>
-
             <h2 style="font-size:1.45rem; font-weight:800; margin-bottom:4px;" id="page-title">Mode de Jeu</h2>
             <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:18px;" id="page-subtitle">Choisissez comment vous souhaitez jouer :</p>
 
@@ -246,19 +235,6 @@
                     <span style="font-weight:700; font-size:0.95rem;" id="panel-online-head">Partagez un lien pour jouer en direct</span>
                 </div>
 
-                <!-- Game Selection -->
-                <div class="form-group" style="margin-bottom:16px;">
-                    <label id="label-game-select" for="game-select">Choisissez un jeu</label>
-                    <select id="game-select" onchange="updateGameSelection()">
-                        <option value="" id="opt-default-game">Sélectionnez un jeu...</option>
-                        <option value="truth_dare" id="opt-truth-dare">Vérité ou Défi</option>
-                        <option value="roleplay" id="opt-roleplay">Jeu de Rôle</option>
-                        <option value="flirty_questions" id="opt-flirty">Questions Flirteuses</option>
-                        <option value="couple_quiz" id="opt-quiz">Quiz Couple</option>
-                        <option value="would_you_rather" id="opt-prefer">Tu préférerais</option>
-                    </select>
-                </div>
-
                 <!-- Create Room Action -->
                 <button class="btn-primary" style="margin-top:0;" id="btn-create-room" onclick="handleCreateRoom()">
                     <i data-lucide="plus-circle"></i>
@@ -310,13 +286,6 @@
                 name1: "Votre nom",
                 name2: "Nom de votre partenaire",
                 relation: "Quelle est votre relation?",
-                gameSelect: "Choisissez un jeu",
-                optDefaultGame: "Sélectionnez un jeu...",
-                optTruthDare: "Vérité ou Défi",
-                optRoleplay: "Jeu de Rôle",
-                optFlirty: "Questions Flirteuses",
-                optQuiz: "Quiz Couple",
-                optPrefer: "Tu préférerais",
                 startLocal: "Lancer la partie",
                 onlineHead: "Partagez un lien pour jouer en direct",
                 createBtn: "Créer une salle maintenant",
@@ -325,8 +294,7 @@
                 joinBtn: "Rejoindre la salle",
                 errEnterBoth: "Veuillez entrer les deux noms.",
                 errCode: "Veuillez entrer un code de salle valide (6 caractères).",
-                errRoomNotFound: "Salle introuvable ou fermée.",
-                errSelectGame: "Veuillez sélectionner un jeu pour créer une salle."
+                errRoomNotFound: "Salle introuvable ou fermée."
             },
             ht: {
                 welcome: "Byenvini",
@@ -341,13 +309,6 @@
                 name1: "Non pa w",
                 name2: "Non patnè w la",
                 relation: "Ki sitiyasyon nou?",
-                gameSelect: "Chwazi yon jwet",
-                optDefaultGame: "Chwazi yon jwet...",
-                optTruthDare: "Vérité ou Défi",
-                optRoleplay: "Jeu de Rôle",
-                optFlirty: "Questions Flirteuses",
-                optQuiz: "Quiz Couple",
-                optPrefer: "Tu préférerais",
                 startLocal: "Kòmanse jwe",
                 onlineHead: "Pataje yon lyen pou n jwe an dirèk",
                 createBtn: "Kreye yon chanm kounye a",
@@ -356,8 +317,7 @@
                 joinBtn: "Rantre nan chanm nan",
                 errEnterBoth: "Tanpri antre tou de non yo.",
                 errCode: "Tanpri antre yon kòd chanm ki valid (6 lèt/chif).",
-                errRoomNotFound: "Chanm sa a pa jwenn oswa li fèmen.",
-                errSelectGame: "Tanpri chwazi yon jwet pou kreye yon chanm."
+                errRoomNotFound: "Chanm sa a pa jwenn oswa li fèmen."
             }
         };
 
@@ -394,13 +354,6 @@
             document.getElementById('label-name1').textContent = t.name1;
             document.getElementById('label-name2').textContent = t.name2;
             document.getElementById('label-situation').textContent = t.relation;
-            document.getElementById('label-game-select').textContent = t.gameSelect;
-            document.getElementById('opt-default-game').textContent = t.optDefaultGame;
-            document.getElementById('opt-truth-dare').textContent = t.optTruthDare;
-            document.getElementById('opt-roleplay').textContent = t.optRoleplay;
-            document.getElementById('opt-flirty').textContent = t.optFlirty;
-            document.getElementById('opt-quiz').textContent = t.optQuiz;
-            document.getElementById('opt-prefer').textContent = t.optPrefer;
             document.getElementById('btn-start-local').textContent = t.startLocal;
             document.getElementById('panel-online-head').textContent = t.onlineHead;
             document.getElementById('btn-create-text').textContent = t.createBtn;
@@ -432,86 +385,24 @@
             window.location.href = 'dashboard.html';
         }
 
-        function updateGameSelection() {
-            const selectedGame = document.getElementById('game-select').value;
-            localStorage.setItem('seduitMoiSelectedGame', selectedGame);
-        }
-
-        async function loadInvitations() {
-            if (!window.seduitOnline) return;
-            
-            try {
-                window.seduitOnline.init();
-                const invitations = await window.seduitOnline.getUserInvitations();
-                
-                if (invitations && invitations.length > 0) {
-                    const panel = document.getElementById('invitations-panel');
-                    const list = document.getElementById('invitations-list');
-                    panel.style.display = 'block';
-                    
-                    list.innerHTML = invitations.map(inv => `
-                        <div style="background:var(--surface); border-radius:8px; padding:10px; display:flex; align-items:center; gap:10px;">
-                            <div style="flex:1;">
-                                <div style="font-weight:700; font-size:0.9rem;">${inv.sender_name || 'Un ami'}</div>
-                                <div style="font-size:0.8rem; color:var(--text-muted);">Salle: ${inv.room_code}</div>
-                            </div>
-                            <div style="display:flex; gap:6px;">
-                                <button onclick="acceptInvitation('${inv.id}', '${inv.room_code}')" style="background:#22c55e; border:none; color:white; border-radius:6px; padding:6px 12px; cursor:pointer; font-size:0.8rem; font-weight:600;">Accepter</button>
-                                <button onclick="declineInvitation('${inv.id}')" style="background:rgba(220,38,38,0.2); border:1px solid rgba(220,38,38,0.5); color:#ef4444; border-radius:6px; padding:6px 12px; cursor:pointer; font-size:0.8rem; font-weight:600;">Refuser</button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            } catch(e) {
-                console.warn('Failed to load invitations:', e);
-            }
-        }
-
-        async function acceptInvitation(invitationId, roomCode) {
-            try {
-                await window.seduitOnline.respondToInvitation(invitationId, 'accepted');
-                // Already joined in respondToInvitation, navigate to dashboard
-                window.location.href = `dashboard.html?room=${encodeURIComponent(roomCode)}`;
-            } catch(e) {
-                alert('Erreur: ' + e.message);
-            }
-        }
-
-        async function declineInvitation(invitationId) {
-            try {
-                await window.seduitOnline.respondToInvitation(invitationId, 'declined');
-                // Reload invitations panel
-                loadInvitations();
-            } catch(e) {
-                alert('Erreur: ' + e.message);
-            }
-        }
-
         async function handleCreateRoom() {
             const btn = document.getElementById('btn-create-room');
             const txt = document.getElementById('btn-create-text');
             const name = document.getElementById('name1').value.trim() || localStorage.getItem('seduitMoiName') || 'Joueur';
             const sit = document.getElementById('situation').value || 'date';
-            const selectedGame = document.getElementById('game-select').value;
-            const t = introTexts[currentLang] || introTexts.fr;
-
-            if (!selectedGame) {
-                alert(t.errSelectGame);
-                return;
-            }
 
             txt.innerHTML = '<span class="loader"></span>';
             btn.disabled = true;
 
             try {
                 window.seduitOnline.init();
-                const code = await window.seduitOnline.createRoom(name, currentLang, sit, selectedGame);
+                const code = await window.seduitOnline.createRoom(name, currentLang, sit);
                 userData.name1 = name;
                 userData.situation = sit;
                 saveUserData();
 
-                // Directly enter room lobby with link & WhatsApp sharing!
-                window.location.href = `online-lobby.html?created=true&room=${encodeURIComponent(code)}`;
+                // Directly enter room dashboard with list of games and online banner!
+                window.location.href = `dashboard.html?room=${encodeURIComponent(code)}`;
             } catch(e) {
                 btn.disabled = false;
                 txt.textContent = introTexts[currentLang].createBtn;
@@ -575,9 +466,6 @@
             } else if (savedName) {
                 document.getElementById('user-avatar-img').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(savedName)}&background=dc2626&color=fff&bold=true`;
             }
-
-            // Load pending invitations
-            loadInvitations();
 
             if (window.lucide) window.lucide.createIcons();
         });
