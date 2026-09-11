@@ -193,9 +193,20 @@ class SeduitMoiOnline {
     }
 
     // ── SUBSCRIBE to Room Channel ─────────────────────────
-    subscribeToRoom(roomCode, callbacks) {
+    async subscribeToRoom(roomCode, callbacks) {
         this.roomCode = roomCode;
         this._callbacks = callbacks || {};
+
+        // Close existing room channel before creating new one
+        if (this.roomChannel) {
+            try {
+                await this.client.removeChannel(this.roomChannel);
+                this.isConnected = false;
+            } catch(e) {
+                console.warn('[SeduitOnline] removeChannel failed:', e);
+            }
+            this.roomChannel = null;
+        }
 
         const channel = this.client.channel(`seduit-room-${roomCode}`, {
             config: { presence: { key: this.myId } }
@@ -215,6 +226,13 @@ class SeduitMoiOnline {
             }
         });
 
+        // Listen for host navigation
+        channel.on('broadcast', { event: 'host_navigation' }, ({ payload }) => {
+            if (this.myRole === 'guest' && payload.url && this._callbacks.onHostNavigation) {
+                this._callbacks.onHostNavigation(payload.url);
+            }
+        });
+
         // Presence: track who's in the room
         channel.on('presence', { event: 'sync' }, () => {
             const state = channel.presenceState();
@@ -225,28 +243,45 @@ class SeduitMoiOnline {
         });
 
         channel.on('presence', { event: 'join' }, ({ newPresences }) => {
+            console.log('[SeduitOnline] partner joined:', newPresences);
             if (this._callbacks.onPartnerJoined) {
                 this._callbacks.onPartnerJoined(newPresences);
             }
         });
 
         channel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
+            console.log('[SeduitOnline] partner left:', leftPresences);
             if (this._callbacks.onPartnerLeft) {
                 this._callbacks.onPartnerLeft(leftPresences);
             }
         });
 
-        channel.subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
-                this.isConnected = true;
-                await channel.track({
-                    player_id: this.myId,
-                    role: this.myRole,
-                    name: this.myName || localStorage.getItem('seduitMoiName') || 'Joueur',
-                    joined_at: new Date().toISOString()
-                });
-                if (this._callbacks.onConnected) this._callbacks.onConnected();
-            }
+        await new Promise((resolve) => {
+            channel.subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    this.isConnected = true;
+                    console.log('[SeduitOnline] subscribed to room', roomCode);
+                    try {
+                        await channel.track({
+                            player_id: this.myId,
+                            role: this.myRole,
+                            name: this.myName || localStorage.getItem('seduitMoiName') || 'Joueur',
+                            joined_at: new Date().toISOString()
+                        });
+                        console.log('[SeduitOnline] presence tracked');
+                    } catch(e) {
+                        console.warn('[SeduitOnline] track failed:', e);
+                    }
+                    if (this._callbacks.onConnected) this._callbacks.onConnected();
+                    resolve();
+                } else if (status === 'CHANNEL_ERROR') {
+                    console.error('[SeduitOnline] channel error');
+                    resolve();
+                } else if (status === 'TIMED_OUT') {
+                    console.warn('[SeduitOnline] subscription timed out');
+                    resolve();
+                }
+            });
         });
 
         this.roomChannel = channel;

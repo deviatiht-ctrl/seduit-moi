@@ -53,31 +53,24 @@
     }
 
     // ── Initialize online sync after game loads ───────────────
-    window.addEventListener('load', function () {
+    window.addEventListener('load', async function () {
         if (!window.seduitOnline) {
             console.warn('[GameSync] seduitOnline not available yet, retrying...');
-            setTimeout(() => {
-                if (window.seduitOnline) initOnlineSync();
+            setTimeout(async () => {
+                if (window.seduitOnline) await initOnlineSync();
             }, 500);
             return;
         }
-        initOnlineSync();
+        await initOnlineSync();
     });
 
-    function initOnlineSync() {
+    async function initOnlineSync() {
         const so = window.seduitOnline;
 
-        // If already connected to same room, don't re-subscribe
-        if (so.roomChannel && so.roomCode === roomCode && so.isConnected) {
-            console.log('[GameSync] Already connected to room', roomCode);
-            injectOnlineBanner();
-            return;
-        }
-
-        // Disconnect old channel if switching rooms
-        if (so.roomChannel && so.roomCode !== roomCode) {
+        // Always disconnect old channel before subscribing on a new page
+        if (so.roomChannel) {
             console.log('[GameSync] Disconnecting from old room', so.roomCode);
-            so.disconnect().catch(() => {});
+            try { await so.disconnect(); } catch(e) {}
         }
 
         so.init();
@@ -92,7 +85,7 @@
         const path = window.location.pathname;
         const gameId = path.split('/').pop().replace('.html', '');
 
-        so.subscribeToRoom(roomCode, {
+        await so.subscribeToRoom(roomCode, {
             onGameState: function ({ state, from, gameId: gId }) {
                 // Only apply state from partner
                 if (from === myRole) return;
@@ -133,6 +126,13 @@
             onConnected: function () {
                 const dot = document.getElementById('_online_sync_dot');
                 if (dot) dot.style.color = '#22c55e';
+            },
+
+            onHostNavigation: function (url) {
+                console.log('[GameSync] Following host to:', url);
+                if (myRole === 'guest' && url) {
+                    window.location.href = url;
+                }
             }
         });
 

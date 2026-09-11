@@ -15,6 +15,8 @@ class SeduitMoiChat {
         this.partnerName = null;
         this.client = null;
         this.channel = null;
+        this.chatChannel = null;
+        this.isChatConnected = false;
     }
 
     init() {
@@ -205,20 +207,28 @@ class SeduitMoiChat {
 
     // ── Subscribe to Realtime Messages ────────────────────────
     subscribeRealtime() {
-        if (!this.client) return;
+        if (!this.client || !this.roomCode) return;
 
-        // 1. Broadcast channel listener for instant speed
-        const roomChan = window.seduitOnline && window.seduitOnline.roomChannel;
-        if (roomChan) {
-            roomChan.on('broadcast', { event: 'chat_msg' }, ({ payload }) => {
-                if (payload.sender_id !== this.myId) {
-                    this.onMessageReceived(payload);
-                }
-            });
-        }
+        // Use our own chat channel so we don't depend on online.roomChannel
+        this.chatChannel = this.client.channel(`seduit-room-chat-${this.roomCode}`, {
+            config: { presence: { key: `chat-${this.myId}` } }
+        });
+
+        this.chatChannel.on('broadcast', { event: 'chat_msg' }, ({ payload }) => {
+            if (payload.sender_id !== this.myId) {
+                this.onMessageReceived(payload);
+            }
+        });
+
+        this.chatChannel.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                this.isChatConnected = true;
+                console.log('[SeduitChat] chat channel connected');
+            }
+        });
 
         // 2. Postgres Changes listener as persistent backup
-        this.client.channel(`chat-${this.roomCode}`)
+        this.client.channel(`chat-pg-${this.roomCode}`)
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
@@ -227,7 +237,6 @@ class SeduitMoiChat {
             }, (payload) => {
                 const msg = payload.new;
                 if (msg.sender_id !== this.myId) {
-                    // Check if already in list to avoid duplicates
                     if (!this.messages.some(m => m.id === msg.id)) {
                         this.onMessageReceived(msg);
                     }
@@ -260,8 +269,9 @@ class SeduitMoiChat {
         this.scrollToBottom();
 
         // 1. Broadcast via Realtime Broadcast
-        if (window.seduitOnline && window.seduitOnline.roomChannel) {
-            window.seduitOnline.roomChannel.send({
+        const broadcastChan = this.chatChannel || (window.seduitOnline && window.seduitOnline.roomChannel);
+        if (broadcastChan) {
+            broadcastChan.send({
                 type: 'broadcast',
                 event: 'chat_msg',
                 payload: newMsg
