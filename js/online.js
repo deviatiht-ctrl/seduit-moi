@@ -10,7 +10,8 @@ class SeduitMoiOnline {
         this.globalChannel = null;
         this.roomCode = null;
         this.myRole = null;        // 'host' | 'guest'
-        this.myId = null;
+        this.myId = null;          // Player ID (for anonymous players)
+        this.userId = null;        // User ID (for registered users)
         this.myName = null;
         this.partnerName = null;
         this.isConnected = false;
@@ -21,7 +22,21 @@ class SeduitMoiOnline {
     init() {
         try {
             this.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            this.myId = this._getOrCreateId();
+
+            // Restore myId from localStorage if already exists, don't regenerate
+            const savedPlayerId = localStorage.getItem('seduitMoiPlayerId');
+            if (savedPlayerId) {
+                this.myId = savedPlayerId;
+            } else {
+                this.myId = this._getOrCreateId();
+            }
+
+            // Check if user is logged in
+            const savedUserId = localStorage.getItem('seduitMoiUserId');
+            if (savedUserId) {
+                this.userId = savedUserId;
+            }
+
             return true;
         } catch(e) {
             console.error('[SeduitOnline] init failed:', e);
@@ -45,18 +60,23 @@ class SeduitMoiOnline {
     }
 
     // ── CREATE Room ───────────────────────────────────────
-    async createRoom(hostName, language, situation) {
+    async createRoom(hostName, language, situation, gameId = null) {
         let code, tries = 0;
+
+        // Use registered user ID if available, otherwise use player ID
+        const hostId = this.userId || this.myId;
+
         while (tries < 5) {
             code = this.generateCode();
             const { error } = await this.client
                 .from('seduis_moi_rooms')
                 .insert({
                     code,
-                    host_player_id: this.myId,
+                    host_player_id: hostId,
                     host_name: hostName,
                     language: language || 'fr',
                     situation: situation || 'date',
+                    game_id: gameId,
                     is_active: true
                 });
             if (!error) break;
@@ -70,6 +90,7 @@ class SeduitMoiOnline {
         localStorage.setItem('seduitMoiRoom', code);
         localStorage.setItem('seduitMoiRole', 'host');
         localStorage.setItem('seduitMoiName', hostName);
+        localStorage.setItem('seduitMoiGameId', gameId || 'default');
         return code;
     }
 
@@ -289,7 +310,7 @@ class SeduitMoiOnline {
     }
 
     // ── SEND INVITATION DIRECTLY ──────────────────────────────
-    async sendInvitation(receiverId, roomCode) {
+    async sendInvitation(receiverId, roomCode, gameId = null) {
         if (!this.client) return;
         const senderName = localStorage.getItem('seduitMoiName') || 'Un ami';
         const senderAvatar = localStorage.getItem('seduitMoiAvatar') || '';
@@ -302,6 +323,7 @@ class SeduitMoiOnline {
                 sender_name: senderName,
                 sender_avatar: senderAvatar,
                 receiver_id: receiverId,
+                game_id: gameId,
                 status: 'pending'
             })
             .select()
@@ -309,6 +331,40 @@ class SeduitMoiOnline {
 
         if (error) throw error;
         return data;
+    }
+
+    // ── SEND GAME INVITATION ───────────────────────────────
+    async sendGameInvitation(receiverUsername, roomCode, gameId = null) {
+        if (!this.client || !this.myId) return { error: 'not_authenticated' };
+
+        // Find receiver by username
+        const { data: receiver, error: findError } = await this.client
+            .from('seduis_moi_users')
+            .select('id')
+            .eq('username', receiverUsername)
+            .single();
+
+        if (findError || !receiver) return { error: 'user_not_found' };
+
+        const senderName = localStorage.getItem('seduitMoiDisplayName') || 'Un ami';
+        const senderAvatar = localStorage.getItem('seduitMoiAvatar') || '';
+
+        const { data, error } = await this.client
+            .from('seduis_moi_invitations')
+            .insert({
+                room_code: roomCode,
+                sender_id: this.myId,
+                sender_name: senderName,
+                sender_avatar: senderAvatar,
+                receiver_id: receiver.id,
+                game_id: gameId,
+                status: 'pending'
+            })
+            .select()
+            .single();
+
+        if (error) return { error };
+        return { data };
     }
 
     // ── LISTEN FOR LIVE INVITATIONS ───────────────────────────
@@ -333,11 +389,173 @@ class SeduitMoiOnline {
     async getActiveRooms() {
         const { data } = await this.client
             .from('seduis_moi_rooms')
-            .select('code, host_name, guest_name, created_at')
+            .select('code, host_name, guest_name, created_at, game_id')
             .eq('is_active', true)
             .order('created_at', { ascending: false })
             .limit(10);
         return data || [];
+    }
+
+    // ── GET Available Games ───────────────────────────────
+    async getAvailableGames() {
+        const { data } = await this.client
+            .from('seduis_moi_games')
+            .select('*')
+            .eq('is_active', true)
+            .order('game_name');
+        return data || [];
+    }
+
+    // ── GET Online Users ──────────────────────────────────
+    async getOnlineUsers() {
+        const { data } = await this.client
+            .from('seduis_moi_users')
+            .select('id, username, display_name, avatar_url, is_online, last_seen')
+            .eq('is_online', true)
+            .order('last_seen', { ascending: false })
+            .limit(20);
+        return data || [];
+    }
+
+    // ── USER REGISTRATION ─────────────────────────────────
+    async registerUser(email, username, password, displayName = null) {
+        if (!this.client) return { error: 'client_not_initialized' };
+
+        const passwordHash = btoa(password); // Simple base64 for demo
+
+        const { data, error } = await this.client
+            .from('seduis_moi_users')
+            .insert({
+                email,
+                username,
+                password_hash: passwordHash,
+                display_name: displayName || username
+            })
+            .select()
+            .single();
+
+        if (error) return { error };
+
+        this.userId = data.id;
+        localStorage.setItem('seduitMoiUserId', data.id);
+        localStorage.setItem('seduitMoiUsername', data.username);
+        localStorage.setItem('seduitMoiDisplayName', data.display_name);
+
+        return { data };
+    }
+
+    // ── USER LOGIN ───────────────────────────────────────
+    async loginUser(email, password) {
+        if (!this.client) return { error: 'client_not_initialized' };
+
+        const passwordHash = btoa(password);
+
+        const { data, error } = await this.client
+            .from('seduis_moi_users')
+            .select('*')
+            .eq('email', email)
+            .eq('password_hash', passwordHash)
+            .single();
+
+        if (error) return { error };
+
+        await this.updateUserOnlineStatus(true);
+
+        this.userId = data.id;
+        localStorage.setItem('seduitMoiUserId', data.id);
+        localStorage.setItem('seduitMoiUsername', data.username);
+        localStorage.setItem('seduitMoiDisplayName', data.display_name);
+        localStorage.setItem('seduitMoiAvatar', data.avatar_url || '');
+
+        return { data };
+    }
+
+    // ── USER LOGOUT ───────────────────────────────────────
+    async logoutUser() {
+        if (this.userId) {
+            await this.updateUserOnlineStatus(false);
+        }
+
+        localStorage.removeItem('seduitMoiUserId');
+        localStorage.removeItem('seduitMoiUsername');
+        localStorage.removeItem('seduitMoiDisplayName');
+        localStorage.removeItem('seduitMoiAvatar');
+
+        this.userId = null;
+    }
+
+    // ── GET CURRENT USER ─────────────────────────────────
+    getCurrentUser() {
+        const userId = localStorage.getItem('seduitMoiUserId');
+        const username = localStorage.getItem('seduitMoiUsername');
+        const displayName = localStorage.getItem('seduitMoiDisplayName');
+        const avatar = localStorage.getItem('seduitMoiAvatar');
+
+        if (userId) {
+            return {
+                id: userId,
+                username,
+                display_name: displayName,
+                avatar_url: avatar,
+                is_registered: true
+            };
+        }
+
+        return {
+            id: this.myId,
+            display_name: localStorage.getItem('seduitMoiName') || 'Joueur',
+            is_registered: false
+        };
+    }
+
+    // ── UPDATE User Online Status ─────────────────────────
+    async updateUserOnlineStatus(isOnline) {
+        if (!this.client || !this.userId) return;
+
+        const { error } = await this.client
+            .from('seduis_moi_users')
+            .update({
+                is_online: isOnline,
+                last_seen: new Date().toISOString()
+            })
+            .eq('id', this.userId);
+
+        if (error) console.warn('[SeduitOnline] Failed to update online status:', error);
+    }
+
+    // ── GET USER INVITATIONS ─────────────────────────────
+    async getUserInvitations() {
+        if (!this.client || !this.myId) return [];
+
+        const { data } = await this.client
+            .from('seduis_moi_invitations')
+            .select('*')
+            .eq('receiver_id', this.myId)
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+
+        return data || [];
+    }
+
+    // ── RESPOND TO INVITATION ────────────────────────────
+    async respondToInvitation(invitationId, response) {
+        if (!this.client) return { error: 'client_not_initialized' };
+
+        const { data, error } = await this.client
+            .from('seduis_moi_invitations')
+            .update({ status: response })
+            .eq('id', invitationId)
+            .select()
+            .single();
+
+        if (error) return { error };
+
+        if (response === 'accepted' && data.room_code) {
+            const currentUser = this.getCurrentUser();
+            await this.joinRoom(data.room_code, currentUser?.display_name || 'Joueur');
+        }
+
+        return { data };
     }
 
     // ── WATCH room for guest joining ──────────────────────

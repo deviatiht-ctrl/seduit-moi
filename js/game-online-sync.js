@@ -54,12 +54,37 @@
 
     // ── Initialize online sync after game loads ───────────────
     window.addEventListener('load', function () {
-        if (!window.seduitOnline) return;
+        if (!window.seduitOnline) {
+            console.warn('[GameSync] seduitOnline not available yet, retrying...');
+            setTimeout(() => {
+                if (window.seduitOnline) initOnlineSync();
+            }, 500);
+            return;
+        }
+        initOnlineSync();
+    });
 
-        window.seduitOnline.init();
-        window.seduitOnline.myRole = myRole;
-        window.seduitOnline.roomCode = roomCode;
-        window.seduitOnline.myName = localStorage.getItem('seduitMoiName') || '';
+    function initOnlineSync() {
+        const so = window.seduitOnline;
+
+        // If already connected to same room, don't re-subscribe
+        if (so.roomChannel && so.roomCode === roomCode && so.isConnected) {
+            console.log('[GameSync] Already connected to room', roomCode);
+            injectOnlineBanner();
+            return;
+        }
+
+        // Disconnect old channel if switching rooms
+        if (so.roomChannel && so.roomCode !== roomCode) {
+            console.log('[GameSync] Disconnecting from old room', so.roomCode);
+            so.disconnect().catch(() => {});
+        }
+
+        so.init();
+        so.myRole = myRole;
+        so.roomCode = roomCode;
+        so.myName = localStorage.getItem('seduitMoiName') || '';
+        so.myId = localStorage.getItem('seduitMoiPlayerId') || so._getOrCreateId();
 
         injectOnlineBanner();
 
@@ -67,7 +92,7 @@
         const path = window.location.pathname;
         const gameId = path.split('/').pop().replace('.html', '');
 
-        window.seduitOnline.subscribeToRoom(roomCode, {
+        so.subscribeToRoom(roomCode, {
             onGameState: function ({ state, from, gameId: gId }) {
                 // Only apply state from partner
                 if (from === myRole) return;
@@ -79,7 +104,7 @@
                 // Apply game state
                 if (window.gameState !== undefined) {
                     window.gameState = state;
-                    
+
                     // Trigger render functions across games
                     if (typeof window.updateBoard === 'function') try { window.updateBoard(); } catch(e) {}
                     if (typeof window.showMeme === 'function') try { window.showMeme(); } catch(e) {}
@@ -110,12 +135,29 @@
                 if (dot) dot.style.color = '#22c55e';
             }
         });
-    });
+
+        // Re-track presence after a delay to ensure visibility
+        setTimeout(async () => {
+            if (so.roomChannel && so.isConnected) {
+                try {
+                    await so.roomChannel.track({
+                        player_id: so.myId,
+                        role: myRole,
+                        name: so.myName || 'Joueur',
+                        joined_at: new Date().toISOString(),
+                        game: gameId
+                    });
+                    console.log('[GameSync] Re-tracked presence');
+                } catch(e) {
+                    console.warn('[GameSync] Re-track failed:', e);
+                }
+            }
+        }, 1500);
+    }
 
     // ── broadcastState helper for game files to call ──────────
     window._broadcastGameState = async function (gameId, state) {
         if (!window._onlineMode || !window.seduitOnline) return;
         await window.seduitOnline.broadcastState(gameId, state);
     };
-
 })();
