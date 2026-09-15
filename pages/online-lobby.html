@@ -478,9 +478,13 @@
             document.getElementById('invite-modal-overlay').style.display = 'flex';
         }
 
-        function acceptInvitation() {
-            if (pendingInviteRoom) {
-                window.location.href = `dashboard.html?room=${pendingInviteRoom}`;
+        async function acceptInvitation() {
+            if (!pendingInviteRoom) return;
+            try {
+                await window.seduitOnline.joinRoom(pendingInviteRoom, localStorage.getItem('seduitMoiName') || 'Joueur');
+                window.location.href = `dashboard.html?room=${encodeURIComponent(pendingInviteRoom)}`;
+            } catch(error) {
+                alert('Impossible de rejoindre la salle : ' + error.message);
             }
         }
 

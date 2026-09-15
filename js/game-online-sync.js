@@ -7,7 +7,7 @@
     // Detect room from URL
     const params = new URLSearchParams(window.location.search);
     const roomCode = params.get('room') || localStorage.getItem('seduitMoiRoom');
-    const myRole = localStorage.getItem('seduitMoiRole'); // 'host' | 'guest'
+    let myRole = localStorage.getItem('seduitMoiRole'); // 'host' | 'guest'
 
     window._onlineMode = !!roomCode;
     window._onlineRoomCode = roomCode;
@@ -18,9 +18,6 @@
     // ── Notify partner UI box ─────────────────────────────────
     function injectOnlineBanner() {
         const lang = (window.userData && window.userData.language) || 'fr';
-        const myName = localStorage.getItem('seduitMoiName') || (lang === 'fr' ? 'Vous' : 'Ou');
-        const data = JSON.parse(localStorage.getItem('seduitMoiData') || '{}');
-        const partnerName = (myRole === 'host') ? data.name2 : data.name1;
 
         const banner = document.createElement('div');
         banner.id = 'online-game-banner';
@@ -35,10 +32,10 @@
             <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;animation:smPulse 1.4s infinite;flex-shrink:0;"></div>
             <span style="color:#ef4444;font-weight:700;letter-spacing:1px;">ROOM ${roomCode}</span>
             <span id="_online_partner_status" style="color:#aaa;font-size:0.8rem;">
-                ${partnerName ? partnerName : (lang === 'fr' ? 'En attente...' : 'Ap tann...')}
+                ${lang === 'fr' ? 'En attente...' : 'Ap tann...'}
             </span>
             <div style="margin-left:auto;display:flex;gap:8px;">
-                <span id="_online_sync_dot" style="color:#22c55e;font-size:0.75rem;">● sync</span>
+                <span id="_online_sync_dot" style="color:#aaa;font-size:0.75rem;">${lang === 'fr' ? 'Connexion...' : 'Koneksyon...'}</span>
             </div>
         `;
         document.body.prepend(banner);
@@ -54,14 +51,23 @@
 
     // ── Initialize online sync after game loads ───────────────
     window.addEventListener('load', async function () {
-        if (!window.seduitOnline) {
-            console.warn('[GameSync] seduitOnline not available yet, retrying...');
-            setTimeout(async () => {
-                if (window.seduitOnline) await initOnlineSync();
-            }, 500);
-            return;
+        injectOnlineBanner();
+        try {
+            if (!window.seduitOnline) {
+                console.warn('[GameSync] seduitOnline not available yet, retrying...');
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            if (!window.seduitOnline) throw new Error('online_unavailable');
+            await initOnlineSync();
+        } catch (error) {
+            console.error('[GameSync] Initialization failed:', error);
+            const dot = document.getElementById('_online_sync_dot');
+            const lang = (window.userData && window.userData.language) || 'fr';
+            if (dot) {
+                dot.textContent = lang === 'fr' ? 'Votre connexion est indisponible' : 'Koneksyon ou pa disponib';
+                dot.style.color = '#f59e0b';
+            }
         }
-        await initOnlineSync();
     });
 
     async function initOnlineSync() {
@@ -74,12 +80,29 @@
         }
 
         so.init();
-        so.myRole = myRole;
-        so.roomCode = roomCode;
-        so.myName = localStorage.getItem('seduitMoiName') || '';
-        so.myId = localStorage.getItem('seduitMoiPlayerId') || so._getOrCreateId();
-
-        injectOnlineBanner();
+        await so.joinRoom(roomCode, localStorage.getItem('seduitMoiName') || '');
+        myRole = so.myRole;
+        window._myOnlineRole = myRole;
+        let partnerLeftTimeout = null;
+        let connectionAvailable = true;
+        const lang = (window.userData && window.userData.language) || 'fr';
+        const updateConnectionStatus = function (status) {
+            connectionAvailable = status === 'SUBSCRIBED';
+            const dot = document.getElementById('_online_sync_dot');
+            if (dot) {
+                dot.textContent = connectionAvailable ? '● sync' : (lang === 'fr' ? 'Votre connexion est indisponible' : 'Koneksyon ou pa disponib');
+                dot.style.color = connectionAvailable ? '#22c55e' : '#f59e0b';
+            }
+            if (!connectionAvailable) {
+                clearTimeout(partnerLeftTimeout);
+                partnerLeftTimeout = null;
+                const el = document.getElementById('_online_partner_status');
+                if (el) {
+                    el.textContent = lang === 'fr' ? 'En attente...' : 'Ap tann...';
+                    el.style.color = '#aaa';
+                }
+            }
+        };
 
         // Determine game ID from URL path
         const path = window.location.pathname;
@@ -88,11 +111,11 @@
         await so.subscribeToRoom(roomCode, {
             onGameState: function ({ state, from, gameId: gId }) {
                 // Only apply state from partner
-                if (from === myRole) return;
+                if (from === myRole || gId !== gameId) return;
 
                 // Flash sync indicator
                 const dot = document.getElementById('_online_sync_dot');
-                if (dot) { dot.style.color = '#f59e0b'; setTimeout(() => dot.style.color = '#22c55e', 400); }
+                if (dot && connectionAvailable) { dot.style.color = '#f59e0b'; setTimeout(() => { if (connectionAvailable) dot.style.color = '#22c55e'; }, 400); }
 
                 // Apply game state
                 if (window.gameState !== undefined) {
@@ -108,51 +131,47 @@
                 }
             },
 
-            onPartnerJoined: function (presences) {
+            onPresenceSync: function (presences) {
+                if (!connectionAvailable) return;
                 const el = document.getElementById('_online_partner_status');
-                const lang = (window.userData && window.userData.language) || 'fr';
-                const name = presences[0] && presences[0].name;
-                if (el) el.textContent = name ? `${name} (Connecté)` : (lang === 'fr' ? 'Connecté' : 'Konekte');
-                if (el) el.style.color = '#22c55e';
+                const oppositeRole = myRole === 'host' ? 'guest' : 'host';
+                const partner = presences.find(player => player.role === oppositeRole && player.player_id && player.player_id !== so.myId);
+                if (partner) {
+                    clearTimeout(partnerLeftTimeout);
+                    partnerLeftTimeout = null;
+                    const connected = lang === 'fr' ? 'Connecté' : 'Konekte';
+                    if (el) {
+                        el.textContent = partner.name ? `${partner.name} (${connected})` : connected;
+                        el.style.color = '#22c55e';
+                    }
+                } else if (partnerLeftTimeout === null) {
+                    partnerLeftTimeout = setTimeout(() => {
+                        partnerLeftTimeout = null;
+                        if (!connectionAvailable) return;
+                        if (el) {
+                            el.textContent = lang === 'fr' ? 'Partenaire déconnecté' : 'Patnè dekonekte';
+                            el.style.color = '#f59e0b';
+                        }
+                    }, 4000);
+                }
             },
 
-            onPartnerLeft: function () {
-                const el = document.getElementById('_online_partner_status');
-                const lang = (window.userData && window.userData.language) || 'fr';
-                if (el) el.textContent = lang === 'fr' ? 'Partenaire déconnecté' : 'Patnè dekonekte';
-                if (el) el.style.color = '#f59e0b';
-            },
+            onConnectionStatus: updateConnectionStatus,
 
             onConnected: function () {
-                const dot = document.getElementById('_online_sync_dot');
-                if (dot) dot.style.color = '#22c55e';
+                updateConnectionStatus('SUBSCRIBED');
             },
 
             onHostNavigation: function (url) {
                 console.log('[GameSync] Following host to:', url);
                 if (myRole === 'guest' && url) {
-                    window.location.href = url;
+                    so.followHostNavigation(url);
                 }
             }
         });
 
         // Re-track presence after a delay to ensure visibility
-        setTimeout(async () => {
-            if (so.roomChannel && so.isConnected) {
-                try {
-                    await so.roomChannel.track({
-                        player_id: so.myId,
-                        role: myRole,
-                        name: so.myName || 'Joueur',
-                        joined_at: new Date().toISOString(),
-                        game: gameId
-                    });
-                    console.log('[GameSync] Re-tracked presence');
-                } catch(e) {
-                    console.warn('[GameSync] Re-track failed:', e);
-                }
-            }
-        }, 1500);
+        if (myRole === 'guest') await so.watchRoomGame(roomCode);
     }
 
     // ── broadcastState helper for game files to call ──────────

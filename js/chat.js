@@ -25,8 +25,8 @@ class SeduitMoiChat {
         if (!roomCode) return; // Only active in online mode
 
         this.roomCode = roomCode;
-        this.myRole = localStorage.getItem('seduitMoiRole') || 'host';
-        this.myId = localStorage.getItem('seduitMoiPlayerId') || 'p_anon';
+        this.myRole = window.seduitOnline?.myRole || localStorage.getItem('seduitMoiRole');
+        this.myId = window.seduitOnline?.userId || localStorage.getItem('seduitMoiUserId') || localStorage.getItem('seduitMoiPlayerId');
         this.myName = localStorage.getItem('seduitMoiName') || 'Moi';
 
         const data = JSON.parse(localStorage.getItem('seduitMoiData') || '{}');
@@ -39,7 +39,6 @@ class SeduitMoiChat {
         this.injectUI();
         this.loadMessageHistory();
         this.subscribeRealtime();
-        this.listenHostNavigation();
     }
 
     // ── Inject Floating Chat Trigger & Drawer ──────────────────
@@ -331,28 +330,20 @@ class SeduitMoiChat {
     }
 
     // ── HOST NAVIGATION SYNC (Host controls game choice) ──────
-    listenHostNavigation() {
+    listenHostNavigation(url) {
         if (!window.seduitOnline) return;
-
-        const roomChan = window.seduitOnline.roomChannel;
-        if (roomChan) {
-            roomChan.on('broadcast', { event: 'host_navigation' }, ({ payload }) => {
-                // If I am Guest, follow Host's navigation!
-                if (this.myRole === 'guest' && payload.url) {
-                    window.location.href = payload.url;
-                }
-            });
-        }
+        // If I am Guest, follow Host's navigation!
+        window.seduitOnline.followHostNavigation(url);
     }
 
     // Call this when Host clicks a game card
-    broadcastHostNavigation(url) {
-        if (this.myRole !== 'host' || !window.seduitOnline || !window.seduitOnline.roomChannel) return;
-        window.seduitOnline.roomChannel.send({
-            type: 'broadcast',
-            event: 'host_navigation',
-            payload: { url, from: 'host' }
-        });
+    async broadcastHostNavigation(url) {
+        const so = window.seduitOnline;
+        if (!so || so.myRole !== 'host') return;
+        const target = new URL(url, window.location.href);
+        const gameId = [null, ...so.gameIds].find(id => so.getGameURL(id) === target.href);
+        if (gameId === undefined) throw new Error('invalid_game');
+        await so.setRoomGame(gameId);
     }
 }
 

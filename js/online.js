@@ -16,12 +16,19 @@ class SeduitMoiOnline {
         this.partnerName = null;
         this.isConnected = false;
         this._callbacks = {};
+        this._roomWatchTimer = null;
+        this._roomWatchChannel = null;
+        this._roomWatchVersion = 0;
+        this._navigationTarget = null;
+        this._hostPlayerId = null;
+        this.gameIds = ['dis-moi', 'action-verite', 'apprend-moi', 'tictactoe', 'hot', 'devinettes', 'preferences', 'defis', 'stickers', 'meme', 'dous-mo'];
     }
 
     // ── Init ──────────────────────────────────────────────
     init() {
         try {
-            this.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            if (this.client) return true;
+            this.client = window.seduitAuth?.client || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
             // Restore myId from localStorage if already exists, don't regenerate
             const savedPlayerId = localStorage.getItem('seduitMoiPlayerId');
@@ -44,6 +51,97 @@ class SeduitMoiOnline {
         }
     }
 
+    async resolveIdentity() {
+        if (!this.client && !this.init()) throw new Error('client_not_initialized');
+        const { data, error } = await this.client.auth.getSession();
+        if (error) throw error;
+        this.userId = data.session?.user?.id || null;
+        this.myId = this.userId || this._getOrCreateId();
+        return this.myId;
+    }
+
+    getGameURL(gameId) {
+        if (gameId !== null && !this.gameIds.includes(gameId)) throw new Error('invalid_game');
+        const path = gameId === null ? '../pages/dashboard.html' : `../games/${gameId}.html`;
+        const url = new URL(path, window.location.href);
+        url.searchParams.set('room', this.roomCode);
+        return url.href;
+    }
+
+    followHostNavigation(url) {
+        if (this.myRole !== 'guest' || !url) return;
+        let target;
+        try { target = new URL(url, window.location.href); } catch(e) { return; }
+        const allowed = [null, ...this.gameIds].some(gameId => target.href === this.getGameURL(gameId));
+        if (!allowed || target.href === window.location.href || target.href === this._navigationTarget) return;
+        this._navigationTarget = target.href;
+        window.location.href = target.href;
+    }
+
+    async setRoomGame(gameId) {
+        if (this.myRole !== 'host' || !this.roomCode) throw new Error('host_required');
+        this.getGameURL(gameId);
+        const { data, error } = await this.client.from('seduis_moi_rooms')
+            .update({ game_id: gameId })
+            .eq('code', this.roomCode)
+            .eq('host_player_id', this._hostPlayerId || this.myId)
+            .eq('is_active', true)
+            .select('code').single();
+        if (error || !data) throw error || new Error('room_update_failed');
+        if (this.roomChannel && this.isConnected) {
+            try {
+                await this.roomChannel.send({
+                    type: 'broadcast', event: 'host_navigation',
+                    payload: { url: this.getGameURL(gameId), from: 'host' }
+                });
+            } catch(e) {
+                console.warn('[SeduitOnline] Navigation broadcast failed; room selection is saved:', e.message);
+            }
+        }
+    }
+
+    async watchRoomGame(roomCode) {
+        await this.stopWatchingRoomGame();
+        if (this.myRole !== 'guest') return;
+        const version = this._roomWatchVersion;
+        let requestVersion = 0;
+        const sync = async () => {
+            const request = ++requestVersion;
+            const navigationTarget = this._navigationTarget;
+            try {
+                const { data, error } = await this.client.from('seduis_moi_rooms')
+                    .select('game_id, is_active').eq('code', roomCode).single();
+                if (version !== this._roomWatchVersion || this.roomCode !== roomCode || request !== requestVersion || navigationTarget !== this._navigationTarget) return;
+                if (error) throw error;
+                if (data?.is_active && (data.game_id === null || this.gameIds.includes(data.game_id))) {
+                    this.followHostNavigation(this.getGameURL(data.game_id));
+                }
+            } catch(e) {
+                console.warn('[SeduitOnline] room navigation sync failed:', e.message);
+            }
+        };
+        this._roomWatchChannel = this.client.channel(`room-game-${roomCode}`)
+            .on('postgres_changes', {
+                event: 'UPDATE', schema: 'public', table: 'seduis_moi_rooms', filter: `code=eq.${roomCode}`
+            }, sync).subscribe();
+        const poll = async () => {
+            await sync();
+            if (version === this._roomWatchVersion) this._roomWatchTimer = setTimeout(poll, 2500);
+        };
+        await poll();
+    }
+
+    async stopWatchingRoomGame() {
+        this._roomWatchVersion++;
+        clearTimeout(this._roomWatchTimer);
+        this._roomWatchTimer = null;
+        if (this._roomWatchChannel) {
+            const channel = this._roomWatchChannel;
+            this._roomWatchChannel = null;
+            await this.client.removeChannel(channel);
+        }
+    }
+
     _getOrCreateId() {
         let id = localStorage.getItem('seduitMoiPlayerId');
         if (!id) {
@@ -61,6 +159,7 @@ class SeduitMoiOnline {
 
     // ── CREATE Room ───────────────────────────────────────
     async createRoom(hostName, language, situation, gameId = null) {
+        await this.resolveIdentity();
         let code, tries = 0;
 
         // Use registered user ID if available, otherwise use player ID
@@ -96,7 +195,10 @@ class SeduitMoiOnline {
 
     // ── JOIN Room ─────────────────────────────────────────
     async joinRoom(code, guestName) {
+        await this.resolveIdentity();
         code = code.trim().toUpperCase();
+        if (!/^[A-Z0-9]{6}$/.test(code)) throw new Error('room_not_found');
+        const identities = [this.myId, this._getOrCreateId()];
 
         // Fetch room
         const { data: room, error: selectError } = await this.client
@@ -107,9 +209,10 @@ class SeduitMoiOnline {
             .single();
 
         if (selectError || !room) throw new Error('room_not_found');
+        this._hostPlayerId = room.host_player_id;
 
         // Case A: You are the Host of this room
-        if (room.host_player_id === this.myId) {
+        if (identities.includes(room.host_player_id)) {
             this.roomCode = code;
             this.myRole = 'host';
             this.myName = guestName || room.host_name;
@@ -129,7 +232,7 @@ class SeduitMoiOnline {
         }
 
         // Case B: You are ALREADY the registered Guest of this room
-        if (room.guest_player_id === this.myId) {
+        if (identities.includes(room.guest_player_id)) {
             this.roomCode = code;
             this.myRole = 'guest';
             this.myName = guestName || room.guest_name;
@@ -158,13 +261,17 @@ class SeduitMoiOnline {
         }
 
         // Case C: Room is open for a new Guest
-        if (!room.guest_player_id || room.guest_player_id === '' || room.guest_player_id === this.myId) {
-            const { error: updateError } = await this.client
+        if (!room.guest_player_id) {
+            const { data: joinedRoom, error: updateError } = await this.client
                 .from('seduis_moi_rooms')
                 .update({ guest_player_id: this.myId, guest_name: guestName })
-                .eq('code', code);
+                .eq('code', code)
+                .eq('is_active', true)
+                .or('guest_player_id.is.null,guest_player_id.eq.')
+                .select('*').single();
 
-            if (updateError) throw new Error('join_failed');
+            if (updateError || !joinedRoom) throw new Error('join_failed');
+            Object.assign(room, joinedRoom);
 
             this.roomCode = code;
             this.myRole = 'guest';
@@ -209,8 +316,9 @@ class SeduitMoiOnline {
         }
 
         const channel = this.client.channel(`seduit-room-${roomCode}`, {
-            config: { presence: { key: this.myId } }
+            config: { presence: { key: this.myId }, broadcast: { ack: true } }
         });
+        this.roomChannel = channel;
 
         // Listen for game state from partner
         channel.on('broadcast', { event: 'game_state' }, ({ payload }) => {
@@ -228,7 +336,7 @@ class SeduitMoiOnline {
 
         // Listen for host navigation
         channel.on('broadcast', { event: 'host_navigation' }, ({ payload }) => {
-            if (this.myRole === 'guest' && payload.url && this._callbacks.onHostNavigation) {
+            if (this.myRole === 'guest' && payload.from === 'host' && payload.url && this._callbacks.onHostNavigation) {
                 this._callbacks.onHostNavigation(payload.url);
             }
         });
@@ -244,20 +352,25 @@ class SeduitMoiOnline {
 
         channel.on('presence', { event: 'join' }, ({ newPresences }) => {
             console.log('[SeduitOnline] partner joined:', newPresences);
-            if (this._callbacks.onPartnerJoined) {
-                this._callbacks.onPartnerJoined(newPresences);
+            const partners = newPresences.filter(p => p.player_id !== this.myId && p.role !== this.myRole);
+            if (partners.length && this._callbacks.onPartnerJoined) {
+                this._callbacks.onPartnerJoined(partners);
             }
         });
 
         channel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
             console.log('[SeduitOnline] partner left:', leftPresences);
-            if (this._callbacks.onPartnerLeft) {
-                this._callbacks.onPartnerLeft(leftPresences);
+            const partners = leftPresences.filter(p => p.player_id !== this.myId && p.role !== this.myRole);
+            if (partners.length && this._callbacks.onPartnerLeft) {
+                this._callbacks.onPartnerLeft(partners);
             }
         });
 
         await new Promise((resolve) => {
             channel.subscribe(async (status) => {
+                if (this.roomChannel !== channel) return;
+                this.isConnected = status === 'SUBSCRIBED';
+                if (this._callbacks.onConnectionStatus) this._callbacks.onConnectionStatus(status);
                 if (status === 'SUBSCRIBED') {
                     this.isConnected = true;
                     console.log('[SeduitOnline] subscribed to room', roomCode);
@@ -279,6 +392,8 @@ class SeduitMoiOnline {
                     resolve();
                 } else if (status === 'TIMED_OUT') {
                     console.warn('[SeduitOnline] subscription timed out');
+                    resolve();
+                } else if (status === 'CLOSED') {
                     resolve();
                 }
             });
@@ -631,6 +746,7 @@ class SeduitMoiOnline {
 
     // ── CLEANUP ───────────────────────────────────────────
     async disconnect() {
+        await this.stopWatchingRoomGame();
         if (this.roomChannel) {
             await this.client.removeChannel(this.roomChannel);
             this.roomChannel = null;

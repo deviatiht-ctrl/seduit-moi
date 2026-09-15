@@ -247,7 +247,11 @@
         const _roomCode = new URLSearchParams(window.location.search).get('room')
                         || localStorage.getItem('seduitMoiRoom');
         const _onlineMode = !!_roomCode;
-        const _myRole = localStorage.getItem('seduitMoiRole');
+        let _myRole = null;
+        let _roomReady = false;
+        let _partnerConnected = false;
+        let _partnerLeftTimer = null;
+        let _navigating = false;
 
         async function initDashboard() {
             createIcons();
@@ -276,6 +280,18 @@
                         'Jwèt sa a bezwen kontak fizik — disponib an mod lokal sèlman.');
                 };
 
+                const so = window.seduitOnline;
+                so.init();
+                const room = await so.joinRoom(_roomCode, localStorage.getItem('seduitMoiName') || 'Joueur');
+                _myRole = so.myRole;
+                window._myOnlineRole = _myRole;
+                userData.name1 = room.host_name;
+                userData.name2 = room.guest_name || '';
+                userData.language = room.language || 'fr';
+                userData.situation = room.situation || 'date';
+                saveUserData();
+                if (_myRole === 'host') await so.setRoomGame(null);
+
                 // Guest view: gray out all games, only Host can choose
                 if (_myRole === 'guest') {
                     document.querySelectorAll('.game-card').forEach(card => {
@@ -303,23 +319,35 @@
                     window.seduitOnline.myRole = _myRole;
 
                     // Subscribe to room channel for presence & game events
-                    window.seduitOnline.subscribeToRoom(_roomCode, {
-                        onPartnerJoined: function(presences) {
-                            const name = presences[0] && presences[0].name;
-                            if (name && userData) {
-                                if (_myRole === 'host') userData.name2 = name;
-                                else userData.name1 = name;
-                                saveUserData();
+                    await window.seduitOnline.subscribeToRoom(_roomCode, {
+                        onHostNavigation: function(url) {
+                            so.followHostNavigation(url);
+                        },
+                        onConnectionStatus: function(status) {
+                            if (status !== 'SUBSCRIBED') {
+                                clearTimeout(_partnerLeftTimer);
+                                _partnerLeftTimer = null;
+                                _partnerConnected = false;
+                                updateOnlineStatus();
                             }
-                            handlePartnerJoined(name);
                         },
                         onPresenceSync: function(players) {
-                            const other = players.find(p => p.player_id !== window.seduitOnline.myId);
-                            if (other && other.name && userData) {
+                            if (!so.isConnected) return;
+                            const other = players.find(p => p.player_id !== so.myId && p.role === (_myRole === 'host' ? 'guest' : 'host'));
+                            if (other) {
+                                clearTimeout(_partnerLeftTimer);
+                                _partnerLeftTimer = null;
+                                _partnerConnected = true;
                                 if (_myRole === 'host') userData.name2 = other.name;
                                 else userData.name1 = other.name;
                                 saveUserData();
                                 handlePartnerJoined(other.name);
+                            } else if (_partnerLeftTimer === null) {
+                                _partnerLeftTimer = setTimeout(() => {
+                                    _partnerLeftTimer = null;
+                                    _partnerConnected = false;
+                                    updateOnlineStatus();
+                                }, 4000);
                             }
                         }
                     });
@@ -329,12 +357,14 @@
                         if (room && room.guest_name && userData) {
                             userData.name2 = room.guest_name;
                             saveUserData();
-                            handlePartnerJoined(room.guest_name);
+                            updateOnlineStatus();
                         }
                     });
 
                     // Track global presence for online player list
                     window.seduitOnline.subscribeToGlobalPresence(renderOnlineModalList);
+                    if (_myRole === 'guest') await so.watchRoomGame(_roomCode);
+                    _roomReady = true;
                 }
 
                 updateOnlineStatus();
@@ -344,7 +374,15 @@
                 displayNames();
             }
         }
-        initDashboard();
+        initDashboard().catch(error => {
+            console.error('[Dashboard] Room initialization failed:', error);
+            _roomReady = false;
+            const status = document.getElementById('ob-status');
+            status.textContent = userData?.language === 'ht'
+                ? 'Pa kapab antre nan chanm nan. Verifye koneksyon ou epi rechaje paj la.'
+                : 'Impossible de rejoindre la salle. Vérifiez votre connexion et rechargez la page.';
+            status.style.color = 'var(--warning)';
+        });
 
         function handlePartnerJoined(partnerName) {
             if (!partnerName) return;
@@ -375,9 +413,10 @@
             const guestName = userData ? userData.name2 : null;
             const hostName = userData ? userData.name1 : null;
 
-            if (guestName && hostName && guestName !== hostName) {
-                document.getElementById('ob-status').innerHTML =
-                    `<span class="ob-partner">${_myRole === 'host' ? guestName : hostName}</span> ${lang === 'fr' ? 'est connecté(e)' : 'konekte'}`;
+            if (!_partnerConnected) document.getElementById('partner-connected-banner').style.display = 'none';
+            if (_partnerConnected) {
+                document.getElementById('ob-status').textContent =
+                    `${_myRole === 'host' ? guestName : hostName} ${lang === 'fr' ? 'est connecté(e)' : 'konekte'}`;
                 document.getElementById('ob-status').style.color = 'var(--success)';
             } else {
                 document.getElementById('ob-status').textContent =
@@ -388,13 +427,23 @@
         }
 
         // Navigate to game, passing room code if online
-        function goToGame(gameId) {
+        async function goToGame(gameId) {
+            if (_navigating) return;
             let url = `../games/${gameId}.html`;
             if (_onlineMode && _roomCode) {
-                url += `?room=${_roomCode}`;
+                if (!_roomReady || _myRole !== 'host') return;
+                _navigating = true;
+                url = window.seduitOnline.getGameURL(gameId);
                 // If I am Host, sync navigation to Guest!
-                if (_myRole === 'host' && window.seduitChat) {
-                    window.seduitChat.broadcastHostNavigation(url);
+                try {
+                    await window.seduitOnline.setRoomGame(gameId);
+                } catch(error) {
+                    _navigating = false;
+                    console.error('[Dashboard] Game selection failed:', error);
+                    alert(userData?.language === 'ht'
+                        ? 'Pa kapab lanse jwèt la. Verifye koneksyon ou epi eseye ankò.'
+                        : 'Impossible de lancer le jeu. Vérifiez votre connexion et réessayez.');
+                    return;
                 }
             }
             window.location.href = url;

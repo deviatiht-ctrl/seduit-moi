@@ -1,4 +1,4 @@
-const CACHE_NAME = 'seduit-moi-v7';
+const CACHE_NAME = 'seduit-moi-v8';
 const ASSETS = [
     './',
     'index.html',
@@ -51,7 +51,7 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Caching assets for v7');
+                console.log('Caching assets for v8');
                 return cache.addAll(ASSETS).catch(err => console.warn('Cache addAll non-fatal:', err));
             })
     );

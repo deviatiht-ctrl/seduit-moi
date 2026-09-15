@@ -470,6 +470,12 @@
                     }
                 } catch(e) {
                     console.warn('Auto-join room error:', e);
+                    const errorAlert = document.getElementById('error-alert');
+                    errorAlert.textContent = currentLang === 'ht'
+                        ? 'Pa kapab antre nan chanm sa a. Li ka plen oswa fèmen. Verifye lyen an epi eseye ankò.'
+                        : 'Impossible de rejoindre cette salle. Elle peut être pleine ou fermée. Vérifiez le lien et réessayez.';
+                    errorAlert.style.display = 'block';
+                    return;
                 }
                 window.location.href = `dashboard.html?room=${encodeURIComponent(targetRoom)}`;
             } else {
